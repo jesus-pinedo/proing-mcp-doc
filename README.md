@@ -6,10 +6,11 @@ El objetivo del proyecto es construir una primera implementación de un servidor
 
 ## Principios iniciales
 
-- El MCP se implementará inicialmente con **Node.js + TypeScript**.
+- El MCP se implementará con **Node.js + TypeScript**.
 - La primera versión se ejecutará localmente.
-- El MCP consultará PostgreSQL como cliente, sin base de datos propia.
-- Las consultas complejas, cruces y reglas de negocio deben resolverse preferiblemente mediante funciones o vistas en PostgreSQL.
+- El MCP consultará PostgreSQL directamente para capacidades de lectura/reporting.
+- Las consultas complejas, cruces y reglas se resolverán mediante Views, Functions o consultas controladas.
+- Las acciones de negocio futuras utilizarán preferentemente APIs/servicios del dominio.
 - El agente no debe conocer ni manipular directamente el modelo relacional interno de Proing.
 - La evolución del MCP será por dominios: operación, inventario y otros que se definan posteriormente.
 - Código y documentación podrán vivir inicialmente en repositorios separados y consolidarse más adelante en GitLab.
@@ -25,23 +26,33 @@ docs/
 ├── 05-prompts.md
 ├── 06-security.md
 ├── 07-decisions.md
-├── 08-current-status.md
-└── 09-v1-definition.md
+└── 08-current-status.md
 
 diagrams/
 └── README.md
 ```
 
+## Responsabilidad de cada documento
+
+- `01-vision.md`: propósito y visión del producto.
+- `02-architecture.md`: arquitectura técnica, integración, transportes, estructura y evolución.
+- `03-tools.md`: criterios y contratos de Tools.
+- `04-resources.md`: estrategia futura de Resources.
+- `05-prompts.md`: estrategia futura de Prompts.
+- `06-security.md`: controles, permisos, secretos, límites y protección de datos.
+- `07-decisions.md`: decisiones arquitectónicas aprobadas.
+- `08-current-status.md`: estado, pendientes y próximo hito.
+
 ## Lectura recomendada
 
 1. `docs/01-vision.md`
-2. `docs/09-v1-definition.md`
-3. `docs/02-architecture.md`
-4. `docs/07-decisions.md`
+2. `docs/02-architecture.md`
+3. `docs/07-decisions.md`
+4. `docs/06-security.md`
 5. `docs/08-current-status.md`
-
-`docs/09-v1-definition.md` consolida la definición arquitectónica de la V1: alcance, stack, transportes MCP, estrategia PostgreSQL, seguridad, estructura del proyecto y criterio de evolución.
 
 ## Estado
 
-Proyecto en fase de definición de la **versión 1 / MVP técnico**.
+Proyecto en fase de definición final del **MVP técnico / V1**.
+
+El siguiente hito es cerrar el contrato funcional de `operacion.consultar_historico_vehiculo`.
