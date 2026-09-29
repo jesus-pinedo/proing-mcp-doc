@@ -14,51 +14,73 @@ Se utilizará la forma:
 
 Ejemplos:
 
-- `operacion.consultar_historico`
+- `operacion.consultar_historico_vehiculo`
 - `operacion.consultar_ordenes`
 - `inventario.consultar_existencia`
 
 ## Tool inicial
 
-### operacion.consultar_historico
+### operacion.consultar_historico_vehiculo
 
 Estado: **por definir / implementar en MVP**
 
 Objetivo:
 
-Consultar información histórica de operación a partir de filtros explícitos.
+Consultar el histórico de un vehículo mediante filtros explícitos de negocio.
 
 Responsabilidades del Tool:
 
 - recibir parámetros definidos;
-- validar los filtros;
+- validar tipos y límites;
 - invocar la capa de datos;
 - retornar un resultado estructurado;
-- controlar errores y límites.
+- controlar errores;
+- evitar que el agente conozca el modelo físico de PostgreSQL.
 
-El Tool no debe contener joins extensos ni conocimiento innecesario del modelo físico.
+La Tool no debe contener SQL libre enviado por el agente.
 
 ## Contrato preliminar
 
-El esquema exacto se definirá al revisar la tabla histórica y los filtros requeridos.
+El contrato exacto se definirá al revisar la fuente real de datos.
 
 Ejemplo conceptual:
 
 ```json
 {
-  "vehiculo": "ABC123",
-  "fecha_desde": "2026-01-01",
-  "fecha_hasta": "2026-01-31"
+  "placa": "ABC123",
+  "fecha_desde": "2026-01-01T00:00:00",
+  "fecha_hasta": "2026-01-31T23:59:59"
 }
 ```
 
 La estructura anterior es ilustrativa y no constituye todavía el contrato definitivo.
+
+El documento funcional de esta Tool deberá definir:
+
+- objetivo;
+- casos de uso;
+- parámetros requeridos;
+- parámetros opcionales;
+- límites;
+- origen de datos;
+- View/Function utilizada;
+- campos de salida;
+- paginación;
+- manejo de fechas;
+- ordenamiento;
+- errores;
+- ejemplos;
+- criterios de aceptación.
 
 ## Tools futuros candidatos
 
 ### operacion.consultar_ordenes
 
 Consulta controlada de órdenes operativas mediante filtros de negocio.
+
+### operacion.consultar_productividad
+
+Consulta analítica de productividad sobre una superficie de datos preparada.
 
 ### inventario.consultar_existencia
 
@@ -73,3 +95,8 @@ Antes de crear un Tool nuevo se debe responder:
 3. ¿Evita exponer detalles internos innecesarios?
 4. ¿Existe una fuente confiable para obtener la información?
 5. ¿Requiere Tool, Resource o simplemente contexto documental?
+6. ¿Es lectura/reporting o ejecuta una acción de negocio?
+
+Para lectura/reporting podrá acceder directamente a una View, Function o consulta controlada de PostgreSQL.
+
+Para acciones de negocio se preferirá utilizar la API o servicio del dominio.
