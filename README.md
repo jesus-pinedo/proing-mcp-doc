@@ -25,7 +25,8 @@ docs/
 ├── 05-prompts.md
 ├── 06-security.md
 ├── 07-decisions.md
-└── 08-current-status.md
+├── 08-current-status.md
+└── 09-v1-definition.md
 
 diagrams/
 └── README.md
@@ -34,9 +35,12 @@ diagrams/
 ## Lectura recomendada
 
 1. `docs/01-vision.md`
-2. `docs/02-architecture.md`
-3. `docs/07-decisions.md`
-4. `docs/08-current-status.md`
+2. `docs/09-v1-definition.md`
+3. `docs/02-architecture.md`
+4. `docs/07-decisions.md`
+5. `docs/08-current-status.md`
+
+`docs/09-v1-definition.md` consolida la definición arquitectónica de la V1: alcance, stack, transportes MCP, estrategia PostgreSQL, seguridad, estructura del proyecto y criterio de evolución.
 
 ## Estado
 
