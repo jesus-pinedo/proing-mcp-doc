@@ -2,48 +2,65 @@
 
 ## Fase
 
-**Definición inicial / preparación del MVP técnico**
+**Definición cerrada de arquitectura base / preparación del MVP técnico**
 
 ## Ya definido
 
-- MCP con Node.js + TypeScript.
+- Un único servidor Proing MCP modular por dominios.
+- Node.js LTS + TypeScript.
+- SDK MCP para TypeScript.
+- Zod para validación.
+- `pg` para PostgreSQL.
+- Proyecto ESM.
 - Primera ejecución local.
-- Conexión directa del MCP a PostgreSQL.
+- Núcleo independiente del transporte.
+- `stdio` como transporte principal local.
+- Streamable HTTP previsto para HTTP/local-remoto.
+- Conexión directa del MCP a PostgreSQL para lectura/reporting.
+- Pool PostgreSQL compartido.
 - Sin base de datos propia para el MCP.
+- Schema conceptual `mcp` para Views/Functions de exposición.
 - Arquitectura orientada a dominios.
 - Tools como capacidades de negocio.
-- La complejidad de joins y reglas debe resolverse fuera del agente.
-- Uso preferente de funciones o vistas para consultas complejas.
+- La complejidad de JOIN y reglas debe resolverse fuera del agente.
+- Uso de Views, Functions o consultas controladas según corresponda.
+- Acciones de negocio futuras preferentemente mediante APIs/servicios.
+- Usuario PostgreSQL dedicado y read-only.
+- Sin SQL generado por el agente.
 - Primer dominio: Operación.
-- Primer Tool candidato: `operacion.consultar_historico`.
-- Resources y Prompts contemplados desde arquitectura, pero no obligatorios para la primera prueba.
+- Primera Tool: `operacion.consultar_historico_vehiculo`.
+- Resources y Prompts contemplados para evolución, pero fuera del alcance de la V1.
+- Infraestructura productiva futura en una EC2 separada.
 - Documentación temporalmente en repositorio independiente.
-- Código trabajado localmente con Codex.
+- Código a versionar en GitLab Proing.
 
 ## Pendientes inmediatos
 
-1. Crear el proyecto local Node.js + TypeScript.
-2. Definir estructura inicial de carpetas.
-3. Instalar y configurar el SDK MCP.
-4. Revisar la fuente de datos real para `operacion.consultar_historico`.
-5. Definir los filtros exactos del Tool.
-6. Definir el contrato de respuesta.
-7. Crear usuario/permisos de PostgreSQL apropiados.
-8. Implementar la conexión.
-9. Implementar el primer Tool.
-10. Probarlo desde un cliente MCP.
+1. Revisar la tabla histórica real y sus campos.
+2. Definir el contrato funcional de `operacion.consultar_historico_vehiculo`.
+3. Definir filtros requeridos y opcionales.
+4. Definir límites de fecha, registros, paginación y timeout.
+5. Diseñar `mcp.vw_historico_vehiculos` o decidir si una consulta controlada es suficiente.
+6. Definir el contrato de salida.
+7. Crear el proyecto local Node.js + TypeScript.
+8. Instalar y configurar el SDK MCP.
+9. Crear usuario/permisos PostgreSQL.
+10. Implementar conexión y pool.
+11. Implementar la primera Tool.
+12. Probarla desde un cliente MCP compatible.
 
 ## Fuera de alcance por ahora
 
-- autenticación remota;
-- despliegue productivo;
+- autenticación remota definitiva;
+- autorización por usuario;
 - alta disponibilidad;
 - múltiples dominios completos;
 - interfaz gráfica;
 - persistencia propia del MCP;
-- servicios HTTP adicionales;
-- prompts personales persistidos.
+- prompts personales persistidos;
+- escritura directa sobre PostgreSQL desde Tools;
+- SQL arbitrario generado por LLM.
 
 ## Próximo hito
 
-**MCP local funcional capaz de responder correctamente una consulta de histórico de operación desde un agente compatible.**
+**Contrato funcional aprobado para `operacion.consultar_historico_vehiculo`, listo para implementación por Codex.**
