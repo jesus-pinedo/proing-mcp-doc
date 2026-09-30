@@ -59,7 +59,7 @@ Usuario
   ↓
 Agente
   ↓
-operacion.consultar_historico_vehiculo
+operacion.consultar_historico_vehiculos
 ```
 
 No se expondrá una Tool genérica del tipo `execute_sql`.
@@ -242,6 +242,38 @@ mcp.fn_productividad(
 También se permite una consulta SQL parametrizada dentro de la capa de datos del dominio cuando crear una View o Function no aporte reutilización.
 
 La decisión entre View, Function y SQL controlado es técnica; el contrato MCP no debe depender del modelo físico.
+
+### Catálogos de dominio en el MCP
+
+Para catálogos pequeños, estables y exclusivos del MCP, la V1 permite mantenerlos como archivos versionados dentro del artefacto.
+
+El primer caso será el catálogo de eventos de vehículos:
+
+```text
+src/
+└── domains/
+    └── operacion/
+        └── catalogs/
+            └── eventos-vehiculo.json
+```
+
+El histórico conservará el valor original del proveedor y la capa de dominio del MCP lo normalizará usando este catálogo.
+
+```text
+PostgreSQL
+   ↓
+evento original
+   ↓
+Repository MCP
+   ↓
+eventos-vehiculo.json
+   ↓
+codigo / nombre / descripcion Proing
+   ↓
+respuesta MCP
+```
+
+No se requiere una tabla catálogo PostgreSQL para este caso en el MVP. Si en el futuro el catálogo necesita edición dinámica, administración por usuarios o reutilización por otros sistemas, se reevaluará su persistencia.
 
 ---
 
@@ -433,8 +465,10 @@ proing-mcp/
 │   │   └── operacion/
 │   │       ├── tools/
 │   │       │   └── consultar-historico-vehiculo.ts
-│   │       └── repositories/
-│   │           └── historico-vehiculo.repository.ts
+│   │       ├── repositories/
+│   │       │   └── historico-vehiculo.repository.ts
+│   │       └── catalogs/
+│   │           └── eventos-vehiculo.json
 │   │
 │   ├── infrastructure/
 │   │   └── database/
@@ -492,7 +526,7 @@ HTTP_PORT
 
 ```text
 PROING MCP
-└── operacion.consultar_historico_vehiculo
+└── operacion.consultar_historico_vehiculos
 ```
 
 ### Futuro
