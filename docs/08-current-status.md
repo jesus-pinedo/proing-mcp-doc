@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Definición cerrada de arquitectura base / preparación del MVP técnico**
+**Bloque 0 cerrado / listo para iniciar Bloque 1 del MVP técnico**
 
 ## Ya definido
 
@@ -37,20 +37,19 @@
 - Infraestructura productiva futura en una EC2 separada.
 - Documentación temporalmente en repositorio independiente.
 - Código a versionar en GitLab Proing.
+- `tso_fecha_hora` se interpretará como hora Colombia (`America/Bogota`, UTC-05:00).
+- La conectividad PostgreSQL de desarrollo fue validada.
+- El usuario de desarrollo actual tiene permiso `SELECT` sobre la tabla histórica.
+- Las credenciales definitivas del futuro usuario `proing_mcp` se configurarán mediante `.env` local no versionado.
 
 ## Pendientes inmediatos
 
-1. Confirmar la zona horaria real almacenada en `tso_fecha_hora`.
-2. Cerrar la definición de `mcp.vw_historico_vehiculos`.
-3. Definir valores iniciales de page size, máximo de placas y timeout.
-4. Validar rendimiento con consultas reales y `EXPLAIN ANALYZE`.
-5. Crear el proyecto local Node.js + TypeScript.
-6. Instalar y configurar el SDK MCP.
-7. Crear usuario/permisos PostgreSQL.
-8. Implementar conexión y pool.
-9. Implementar catálogo JSON de eventos.
-10. Implementar la primera Tool.
-11. Probarla desde un cliente MCP compatible.
+1. Ejecutar Bloque 1: crear el proyecto local Node.js + TypeScript.
+2. Crear `.env.example` y excluir `.env` de Git.
+3. Instalar las dependencias mínimas del MVP.
+4. Validar build, ejecución y test base.
+5. Continuar con Bloque 2: configuración y pool PostgreSQL.
+6. Crear posteriormente el usuario definitivo `proing_mcp` con permisos mínimos de lectura.
 
 ## Fuera de alcance por ahora
 
@@ -66,4 +65,4 @@
 
 ## Próximo hito
 
-**Cerrar zona horaria, superficie PostgreSQL y límites operativos de `operacion.consultar_historico_vehiculos` para dejar la V1 lista para implementación por Codex.**
+**Ejecutar el Bloque 1 del plan de implementación: bootstrap Node.js + TypeScript.**
