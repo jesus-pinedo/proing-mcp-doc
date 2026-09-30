@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0 y 1 cerrados / Bloque 2 listo para ejecutar  
+**Estado:** Bloques 0, 1 y 2 cerrados / Bloque 3 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -196,39 +196,42 @@ Cumplido.
 
 # 6. Bloque 2 — Configuración y conexión PostgreSQL
 
+**Estado: CERRADO**
+
 ## Objetivo
 
 Implementar configuración tipada y un único pool PostgreSQL reutilizable.
 
-## Archivos conceptuales
+## Resultado
+
+Se implementó:
+
+- `src/config/env.ts`;
+- `src/infrastructure/database/postgres.ts`;
+- `src/infrastructure/database/check-connection.ts`;
+- validación tipada de variables;
+- carga nativa de `.env` mediante `process.loadEnvFile`;
+- pool PostgreSQL único y reutilizable;
+- soporte opcional de `query_timeout`;
+- cierre ordenado del pool;
+- script `npm run db:check`;
+- tests unitarios de configuración y singleton del pool.
+
+Se agregó `@types/pg@8.23.1` como dependencia de desarrollo.
+
+Validaciones finales:
 
 ```text
-src/config/env.ts
-src/infrastructure/database/postgres.ts
+npm run db:check  → exitoso
+npm run build     → exitoso
+npm test          → 7 aprobados / 0 fallidos
 ```
 
-## Reglas
-
-- no crear una conexión por Tool;
-- utilizar un único pool;
-- validar variables requeridas al iniciar;
-- no imprimir password ni connection string;
-- soportar cierre ordenado del pool;
-- permitir timeout de consulta configurable.
-
-## Prueba mínima
-
-Ejecutar una consulta inocua de conectividad, por ejemplo:
-
-```text
-SELECT 1
-```
-
-No consultar todavía el histórico desde la Tool.
+No se implementaron consultas históricas, Views, repositories, catálogo, Tools ni transportes.
 
 ## Criterio de cierre
 
-El proyecto puede abrir y cerrar correctamente una conexión PostgreSQL mediante el pool configurado.
+Cumplido.
 
 ---
 
