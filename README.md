@@ -26,7 +26,8 @@ docs/
 ├── 05-prompts.md
 ├── 06-security.md
 ├── 07-decisions.md
-└── 08-current-status.md
+├── 08-current-status.md
+└── 09-implementation-plan.md
 
 diagrams/
 └── README.md
@@ -42,6 +43,7 @@ diagrams/
 - `06-security.md`: controles, permisos, secretos, límites y protección de datos.
 - `07-decisions.md`: decisiones arquitectónicas aprobadas.
 - `08-current-status.md`: estado, pendientes y próximo hito.
+- `09-implementation-plan.md`: ejecución del MVP por bloques, con validaciones y criterios de cierre.
 
 ## Lectura recomendada
 
@@ -50,9 +52,10 @@ diagrams/
 3. `docs/07-decisions.md`
 4. `docs/06-security.md`
 5. `docs/08-current-status.md`
+6. `docs/09-implementation-plan.md`
 
 ## Estado
 
 Proyecto en fase de definición final del **MVP técnico / V1**.
 
-El siguiente hito es cerrar el contrato funcional de `operacion.consultar_historico_vehiculo`.
+El siguiente hito es ejecutar el MVP siguiendo `docs/09-implementation-plan.md`, empezando por el Bloque 0.
