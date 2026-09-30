@@ -513,10 +513,11 @@ DATABASE_USER
 DATABASE_PASSWORD
 DATABASE_POOL_MAX
 
+APP_TIMEZONE=America/Bogota
 HTTP_PORT
 ```
 
-`.env` se podrá utilizar durante desarrollo local y no se versionará.
+`.env` se utilizará durante desarrollo local para credenciales y configuración sensible y no se versionará. El repositorio incluirá únicamente `.env.example` sin secretos.
 
 ---
 
