@@ -90,7 +90,7 @@ Ejemplos:
 
 Los Tools utilizarán nombres orientados a capacidades, por ejemplo:
 
-`operacion.consultar_historico_vehiculo`
+`operacion.consultar_historico_vehiculos`
 
 `inventario.consultar_existencia`
 
@@ -136,7 +136,7 @@ Las Tools no dependerán del transporte.
 
 La primera capacidad será:
 
-`operacion.consultar_historico_vehiculo`
+`operacion.consultar_historico_vehiculos`
 
 Su contrato funcional se definirá antes de implementar.
 
@@ -193,3 +193,28 @@ Durante la etapa inicial, la documentación se mantiene en este repositorio inde
 El código se trabajará localmente y posteriormente se versionará en GitLab Proing.
 
 La documentación podrá migrarse al repositorio definitivo cuando se decida consolidar ambos.
+
+
+---
+
+## DEC-016 — Catálogo de eventos en JSON para el MVP
+
+**Estado:** Aprobada
+
+El catálogo que normaliza los valores de `tso_evento` se mantendrá inicialmente como un archivo JSON versionado dentro del dominio de Operación del MCP.
+
+Ubicación conceptual:
+
+```text
+src/domains/operacion/catalogs/eventos-vehiculo.json
+```
+
+PostgreSQL conservará y entregará el valor original del proveedor. La capa de dominio del MCP traducirá ese valor a código, nombre y descripción Proing.
+
+### Motivo
+
+- catálogo pequeño y estable;
+- simplicidad para el MVP;
+- versionado en Git;
+- evita crear una tabla adicional únicamente para este artefacto;
+- permite migrarlo posteriormente a una fuente dinámica sin cambiar el contrato de la Tool.
