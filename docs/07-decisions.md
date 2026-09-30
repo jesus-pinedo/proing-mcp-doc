@@ -218,3 +218,50 @@ PostgreSQL conservará y entregará el valor original del proveedor. La capa de 
 - versionado en Git;
 - evita crear una tabla adicional únicamente para este artefacto;
 - permite migrarlo posteriormente a una fuente dinámica sin cambiar el contrato de la Tool.
+
+
+---
+
+## DEC-017 — Zona horaria del histórico
+
+**Estado:** Aprobada
+
+La columna `transportes.tr_vehiculos_tso_historico.tso_fecha_hora`, definida como `timestamp without time zone`, se interpretará en la V1 como hora local de Colombia:
+
+```text
+America/Bogota
+UTC-05:00
+```
+
+### Evidencia
+
+En registros recientes, `tso_fecha_hora` y `tso_fecha_server` utilizan el mismo reloj local y normalmente presentan diferencias de segundos o pocos minutos, sin un desfase sistemático de cinco horas.
+
+Se observó al menos un registro con hora del dispositivo adelantada respecto a la hora del servidor. Este comportamiento se considera una posible anomalía del dispositivo/proveedor, no un cambio de zona horaria.
+
+### Regla de contrato
+
+El MCP interpretará `tso_fecha_hora` como `America/Bogota` y expondrá fechas con offset explícito.
+
+---
+
+## DEC-018 — Credenciales locales mediante .env
+
+**Estado:** Aprobada
+
+Las credenciales reales de PostgreSQL para desarrollo local se configurarán en un archivo `.env` no versionado.
+
+El repositorio incluirá únicamente `.env.example` sin secretos.
+
+El usuario definitivo `proing_mcp` podrá crearse posteriormente; al estar disponible, sus credenciales sustituirán las credenciales temporales de desarrollo en el `.env`.
+
+Variables mínimas:
+
+```text
+DATABASE_HOST
+DATABASE_PORT
+DATABASE_NAME
+DATABASE_USER
+DATABASE_PASSWORD
+APP_TIMEZONE=America/Bogota
+```
