@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloque 0 cerrado / listo para iniciar Bloque 1 del MVP técnico**
+**Bloques 0 y 1 cerrados / listo para iniciar Bloque 2 del MVP técnico**
 
 ## Ya definido
 
@@ -44,12 +44,35 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 1: crear el proyecto local Node.js + TypeScript.
-2. Crear `.env.example` y excluir `.env` de Git.
-3. Instalar las dependencias mínimas del MVP.
-4. Validar build, ejecución y test base.
-5. Continuar con Bloque 2: configuración y pool PostgreSQL.
-6. Crear posteriormente el usuario definitivo `proing_mcp` con permisos mínimos de lectura.
+1. Ejecutar Bloque 2: configuración tipada y pool PostgreSQL.
+2. Crear `.env` local con credenciales de desarrollo.
+3. Validar conexión con `SELECT 1`.
+4. Implementar cierre ordenado del pool.
+5. Dejar preparado el reemplazo posterior por el usuario definitivo `proing_mcp`.
+6. No consultar todavía el histórico desde una Tool.
+
+## Bloque 1 — Resultado
+
+**Estado: CERRADO**
+
+Implementación reportada:
+
+- Node.js `24.21.0`.
+- npm `11.19.0`.
+- `@modelcontextprotocol/server@2.2.0`.
+- `zod@4.6.5`.
+- `pg@8.23.0`.
+- `typescript@7.0.2`.
+- `tsx@4.23.15`.
+- `@types/node@26.6.3`.
+- proyecto ESM;
+- build exitoso;
+- ejecución compilada exitosa;
+- test base aprobado;
+- `.env` ignorado;
+- `.env.example` creado sin secretos;
+- estructura de carpetas base creada;
+- no se adelantaron bloques posteriores.
 
 ## Fuera de alcance por ahora
 
@@ -65,4 +88,4 @@
 
 ## Próximo hito
 
-**Ejecutar el Bloque 1 del plan de implementación: bootstrap Node.js + TypeScript.**
+**Ejecutar el Bloque 2 del plan de implementación: configuración y conexión PostgreSQL.**
