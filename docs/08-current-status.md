@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0 y 1 cerrados / listo para iniciar Bloque 2 del MVP técnico**
+**Bloques 0, 1 y 2 cerrados / listo para iniciar Bloque 3 del MVP técnico**
 
 ## Ya definido
 
@@ -44,12 +44,36 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 2: configuración tipada y pool PostgreSQL.
-2. Crear `.env` local con credenciales de desarrollo.
-3. Validar conexión con `SELECT 1`.
-4. Implementar cierre ordenado del pool.
-5. Dejar preparado el reemplazo posterior por el usuario definitivo `proing_mcp`.
-6. No consultar todavía el histórico desde una Tool.
+1. Crear `AGENTS.md` en el repositorio de código con las reglas permanentes para agentes.
+2. Ejecutar Bloque 3: crear la superficie PostgreSQL `mcp.vw_historico_vehiculos`.
+3. Validar conversiones seguras de latitud y longitud.
+4. Validar consultas con una y varias placas y rangos de fecha.
+5. No implementar todavía catálogo JSON, repository, Tool ni transportes.
+
+## Bloque 2 — Resultado
+
+**Estado: CERRADO**
+
+Implementación y validaciones reportadas:
+
+- configuración tipada de variables de entorno;
+- carga mediante `process.loadEnvFile(".env")`;
+- sin dependencia `dotenv`;
+- pool PostgreSQL singleton y reutilizable;
+- `query_timeout` opcional;
+- cierre explícito del pool;
+- script `npm run db:check`;
+- conexión PostgreSQL real validada con éxito;
+- `npm run build`: exitoso;
+- `npm test`: 7 aprobados, 0 fallidos;
+- no se imprimieron secretos ni connection strings;
+- no se avanzó al Bloque 3.
+
+Dependencia de tipos agregada:
+
+```text
+@types/pg@8.23.1
+```
 
 ## Bloque 1 — Resultado
 
@@ -88,4 +112,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Ejecutar el Bloque 2 del plan de implementación: configuración y conexión PostgreSQL.**
+**Crear AGENTS.md y ejecutar el Bloque 3: superficie PostgreSQL del histórico.**
