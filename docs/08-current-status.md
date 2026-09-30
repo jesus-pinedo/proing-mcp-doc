@@ -28,7 +28,11 @@
 - Usuario PostgreSQL dedicado y read-only.
 - Sin SQL generado por el agente.
 - Primer dominio: Operación.
-- Primera Tool: `operacion.consultar_historico_vehiculo`.
+- Primera Tool: `operacion.consultar_historico_vehiculos`.
+- La Tool soportará una o varias placas y hasta 31 días por consulta.
+- El histórico devolverá coordenadas, dirección, velocidad y evento normalizado.
+- El catálogo de eventos del MVP vivirá en `src/domains/operacion/catalogs/eventos-vehiculo.json`.
+- La normalización del evento se realizará en la capa de dominio del MCP, conservando el valor original del proveedor.
 - Resources y Prompts contemplados para evolución, pero fuera del alcance de la V1.
 - Infraestructura productiva futura en una EC2 separada.
 - Documentación temporalmente en repositorio independiente.
@@ -36,18 +40,17 @@
 
 ## Pendientes inmediatos
 
-1. Revisar la tabla histórica real y sus campos.
-2. Definir el contrato funcional de `operacion.consultar_historico_vehiculo`.
-3. Definir filtros requeridos y opcionales.
-4. Definir límites de fecha, registros, paginación y timeout.
-5. Diseñar `mcp.vw_historico_vehiculos` o decidir si una consulta controlada es suficiente.
-6. Definir el contrato de salida.
-7. Crear el proyecto local Node.js + TypeScript.
-8. Instalar y configurar el SDK MCP.
-9. Crear usuario/permisos PostgreSQL.
-10. Implementar conexión y pool.
-11. Implementar la primera Tool.
-12. Probarla desde un cliente MCP compatible.
+1. Confirmar la zona horaria real almacenada en `tso_fecha_hora`.
+2. Cerrar la definición de `mcp.vw_historico_vehiculos`.
+3. Definir valores iniciales de page size, máximo de placas y timeout.
+4. Validar rendimiento con consultas reales y `EXPLAIN ANALYZE`.
+5. Crear el proyecto local Node.js + TypeScript.
+6. Instalar y configurar el SDK MCP.
+7. Crear usuario/permisos PostgreSQL.
+8. Implementar conexión y pool.
+9. Implementar catálogo JSON de eventos.
+10. Implementar la primera Tool.
+11. Probarla desde un cliente MCP compatible.
 
 ## Fuera de alcance por ahora
 
@@ -63,4 +66,4 @@
 
 ## Próximo hito
 
-**Contrato funcional aprobado para `operacion.consultar_historico_vehiculo`, listo para implementación por Codex.**
+**Cerrar zona horaria, superficie PostgreSQL y límites operativos de `operacion.consultar_historico_vehiculos` para dejar la V1 lista para implementación por Codex.**
