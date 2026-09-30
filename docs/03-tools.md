@@ -113,7 +113,9 @@ Se propone exponer esta información mediante una superficie controlada, preferi
 mcp.vw_historico_vehiculos
 ```
 
-La View podrá encargarse de normalizar nombres, tipos y eventos sin exponer el esquema físico al agente.
+La View podrá encargarse de normalizar nombres y tipos sin exponer el esquema físico al agente.
+
+La normalización del evento se realizará en la capa de dominio del MCP mediante un catálogo JSON versionado en el repositorio.
 
 ---
 
@@ -209,6 +211,14 @@ Ejemplo conceptual:
 El valor almacenado en `tso_evento` corresponde al evento recibido desde el proveedor.
 
 El MCP no debe obligar al agente a interpretar directamente estos valores. Cada evento se normaliza a un código Proing y un nombre en español.
+
+En la V1, este catálogo vivirá dentro del artefacto MCP como archivo JSON versionado:
+
+```text
+src/domains/operacion/catalogs/eventos-vehiculo.json
+```
+
+PostgreSQL entrega el valor original de `tso_evento`; la capa de dominio del MCP consulta el JSON y construye `evento.codigo`, `evento.nombre` y `evento.descripcion`.
 
 La V1 inicia con el siguiente catálogo:
 
