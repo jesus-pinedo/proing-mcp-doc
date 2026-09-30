@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Preparado para ejecución por bloques  
+**Estado:** Bloque 0 cerrado / Bloque 1 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -100,63 +100,45 @@ Si durante un bloque aparece una decisión no cubierta por la documentación, Co
 
 # 4. Bloque 0 — Precondiciones
 
+**Estado: CERRADO**
+
 ## Objetivo
 
 Cerrar los datos de infraestructura y negocio indispensables antes de implementar.
 
-## Pendientes
-
 ### 4.1 Zona horaria
 
-Confirmar qué representa realmente:
+Se confirmó que `transportes.tr_vehiculos_tso_historico.tso_fecha_hora` es `timestamp without time zone` y se interpretará como:
 
 ```text
-transportes.tr_vehiculos_tso_historico.tso_fecha_hora
+America/Bogota
+UTC-05:00
 ```
 
-La columna es:
-
-```text
-timestamp without time zone
-```
-
-Debe determinarse si los valores almacenados representan:
-
-- hora Colombia (`America/Bogota`); o
-- UTC; u
-- otra convención.
-
-No implementar conversión definitiva de fechas hasta cerrar esta decisión.
+Los registros recientes muestran que `tso_fecha_hora` y `tso_fecha_server` utilizan el mismo reloj local. La salida MCP deberá exponer fecha/hora con offset explícito.
 
 ### 4.2 Conectividad PostgreSQL
 
-Disponer de:
+Se validó conectividad y permiso de lectura sobre la tabla histórica con el usuario de desarrollo actual.
 
-```text
-DATABASE_HOST
-DATABASE_PORT
-DATABASE_NAME
-DATABASE_USER
-DATABASE_PASSWORD
-```
+Las credenciales reales se almacenarán en `.env`, que no se versionará. El repositorio incluirá `.env.example` sin secretos.
 
-El usuario utilizado para el MVP debe ser de lectura.
+Cuando se cree el usuario definitivo `proing_mcp`, sus credenciales reemplazarán las temporales de desarrollo.
 
 ### 4.3 Límites iniciales
 
-Valores iniciales propuestos para pruebas:
-
 ```text
 DEFAULT_PAGE_SIZE = 1000
-MAX_PAGE_SIZE     = 5000
+MAX_PAGE_SIZE = 5000
 MAX_DATE_RANGE_DAYS = 31
+APP_TIMEZONE = America/Bogota
 ```
 
-El máximo de placas y timeout deberán definirse durante las pruebas de rendimiento.
+El máximo de placas y el timeout se definirán después de las mediciones de rendimiento.
 
 ## Criterio de cierre
 
-No avanzar al Bloque 1 hasta disponer de conectividad de desarrollo y haber identificado la convención de `tso_fecha_hora`, o dejar explícitamente una estrategia temporal controlada para desarrollo.
+Cumplido. Puede iniciarse el Bloque 1.
 
 ---
 
