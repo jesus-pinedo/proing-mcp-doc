@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloque 0 cerrado / Bloque 1 listo para ejecutar  
+**Estado:** Bloques 0 y 1 cerrados / Bloque 2 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -144,63 +144,53 @@ Cumplido. Puede iniciarse el Bloque 1.
 
 # 5. Bloque 1 — Bootstrap Node.js + TypeScript
 
+**Estado: CERRADO**
+
 ## Objetivo
 
 Crear el proyecto mínimo ejecutable.
 
-## Estructura inicial esperada
+## Resultado
+
+Se creó la estructura base documentada con:
+
+- Node.js 24 LTS;
+- TypeScript;
+- ESM;
+- npm;
+- MCP TypeScript SDK;
+- Zod;
+- pg;
+- scripts de desarrollo, build, start y test;
+- `.env.example`;
+- `.gitignore`;
+- test mínimo de bootstrap.
+
+Versiones reportadas:
 
 ```text
-proing-mcp/
-│
-├── src/
-│   ├── server/
-│   ├── transports/
-│   ├── domains/
-│   │   └── operacion/
-│   │       ├── tools/
-│   │       ├── repositories/
-│   │       └── catalogs/
-│   ├── infrastructure/
-│   │   └── database/
-│   ├── config/
-│   └── index.ts
-│
-├── database/
-│   └── views/
-│
-├── tests/
-├── .env.example
-├── .gitignore
-├── package.json
-└── tsconfig.json
+Node.js 24.21.0
+npm 11.19.0
+@modelcontextprotocol/server 2.2.0
+zod 4.6.5
+pg 8.23.0
+typescript 7.0.2
+tsx 4.23.15
+@types/node 26.6.3
 ```
 
-## Dependencias esperadas
+Validaciones:
 
-Como mínimo:
-
-```text
-@modelcontextprotocol/server
-zod
-pg
-```
-
-Más dependencias únicamente cuando sean necesarias para ejecutar o probar el proyecto.
-
-## Validaciones
-
-- TypeScript compila.
-- El proyecto utiliza ESM.
-- Existe un comando de desarrollo.
-- Existe un comando de build.
-- Existe un comando de test.
-- `.env` está ignorado por Git.
-- `.env.example` no contiene secretos.
+- `npm install`: exitoso;
+- `npm run build`: exitoso;
+- `npm start`: exitoso;
+- `npm test`: 1 aprobado, 0 fallidos;
+- sin secretos detectados;
+- no se implementaron elementos de bloques posteriores.
 
 ## Criterio de cierre
 
-Proyecto vacío pero compilable y ejecutable.
+Cumplido.
 
 ---
 
