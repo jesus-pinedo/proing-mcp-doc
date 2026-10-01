@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0, 1, 2, 3 y 4 cerrados / Bloque 5 listo para ejecutar  
+**Estado:** Bloques 0, 1, 2, 3, 4 y 5 cerrados / Bloque 6 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -337,85 +337,46 @@ Cumplido.
 
 # 9. Bloque 5 — Repository y paginación
 
-## Objetivo
+**Estado: CERRADO**
 
-Implementar acceso al histórico desde el MCP sin exponer SQL al agente.
+## Resultado
 
-## Archivo conceptual
-
-```text
-src/domains/operacion/repositories/historico-vehiculos.repository.ts
-```
-
-## Entrada interna
+Se implementó:
 
 ```text
-placas[]
-fecha_inicio
-fecha_fin
-limit
-cursor?
+src/domains/operacion/repositories/vehicle-history.repository.ts
+src/domains/operacion/repositories/vehicle-history.cursor.ts
+tests/vehicle-history.repository.test.ts
+tests/vehicle-history.cursor.test.ts
 ```
 
-## Consulta
+Características:
 
-Debe utilizar SQL parametrizado.
-
-Filtro conceptual:
-
-```text
-placa IN (...)
-fecha_hora >= fecha_inicio
-fecha_hora <= fecha_fin
-```
-
-## Orden
-
-```text
-fecha_hora ASC
-placa ASC
-```
-
-## Paginación
-
-Implementar keyset pagination mediante cursor opaco.
-
-El cursor puede representar internamente:
-
-```text
-fecha_hora
-placa
-```
-
-El cliente/agente no debe construir ni modificar estos componentes directamente.
-
-Para saber si existe otra página:
-
-```text
-requested_limit = N
-SQL LIMIT = N + 1
-```
-
-Si llegan `N + 1` registros:
-
-```text
-devolver N
-has_more = true
-next_cursor = cursor del último registro retornado
-```
-
-No ejecutar `COUNT(*)` para paginar.
-
-## Seguridad
-
+- consulta exclusivamente `mcp.vw_historico_vehiculos`;
 - SQL parametrizado;
-- placas como valores, nunca interpoladas;
-- cursor validado antes de utilizarse;
-- límites aplicados en servidor.
+- una o varias placas;
+- keyset pagination;
+- cursor base64url versionado;
+- clave lógica `fecha_hora + placa`;
+- orden `fecha_hora ASC, placa ASC`;
+- `LIMIT N + 1`;
+- sin `COUNT(*)`;
+- sin `OFFSET`;
+- fechas leídas como texto local explícito con seis dígitos de microsegundos;
+- sin dependencia de zona horaria de Node.js;
+- evento conservado como `eventoValorOrigen`;
+- testabilidad mediante ejecutor mínimo inyectable.
+
+Validaciones:
+
+```text
+npm run build → exitoso
+npm test      → 37 aprobados / 0 fallidos
+```
 
 ## Criterio de cierre
 
-Es posible recorrer un resultado de varias páginas sin duplicar ni omitir registros.
+Cumplido.
 
 ---
 
