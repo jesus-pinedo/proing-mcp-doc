@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0–7.5 cerrados / Bloque 8 listo para ejecutar  
+**Estado:** Bloques 0–8 cerrados / Bloque 9 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -534,43 +534,61 @@ Cumplido.
 
 # 12. Bloque 8 — Streamable HTTP
 
-## Objetivo
+**Estado: CERRADO**
 
-Exponer el mismo servidor MCP mediante Streamable HTTP sin duplicar lógica.
+## Resultado
 
-## Archivo conceptual
+Se implementó:
 
 ```text
 src/transports/http.ts
+src/transports/lifecycle.ts
+tests/http.test.ts
 ```
 
-Endpoint local conceptual:
+Se agregó:
 
 ```text
-http://localhost:<HTTP_PORT>/mcp
+@modelcontextprotocol/node@2.1.0
 ```
 
-## Regla
+Características:
 
-No duplicar:
+- `createMcpHandler(factory, { legacy: "stateless" })`;
+- `toNodeHandler`;
+- servidor `node:http`;
+- escucha en `127.0.0.1`;
+- endpoint `/mcp`;
+- rutas distintas devuelven 404;
+- validación local de Host y Origin;
+- factory reutiliza `createProingServer()`;
+- nuevo `McpServer` por request;
+- pool PostgreSQL singleton compartido;
+- sin sesiones, Redis, event store ni resumabilidad;
+- lifecycle compartido y específico, sin helpers genéricos;
+- `stdio` permanece funcional.
 
-- Tool;
-- schemas;
-- repository;
-- catálogo;
-- reglas de negocio.
+Validaciones:
 
-El transporte solo debe adaptar la conexión MCP.
+```text
+npm run build    → exitoso
+npm test         → 78 aprobados / 0 fallidos
+npm run db:check → exitoso
+tools/list HTTP  → exitoso
+tools/call HTTP  → exitoso
+```
 
-## Seguridad MVP
+Una invocación real por HTTP devolvió registros con:
 
-El endpoint HTTP será únicamente para desarrollo/pruebas locales.
-
-No implementar todavía autenticación productiva.
+- `structuredContent`;
+- fechas `-05:00`;
+- coordenadas numéricas;
+- evento normalizado;
+- paginación correcta.
 
 ## Criterio de cierre
 
-La misma Tool funciona tanto por `stdio` como por Streamable HTTP.
+Cumplido.
 
 ---
 
