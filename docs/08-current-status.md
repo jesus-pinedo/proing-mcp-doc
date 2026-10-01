@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0, 1 y 2 cerrados / listo para iniciar Bloque 3 del MVP técnico**
+**Bloques 0, 1, 2 y 3 cerrados / listo para iniciar Bloque 4 del MVP técnico**
 
 ## Ya definido
 
@@ -44,11 +44,55 @@
 
 ## Pendientes inmediatos
 
-1. Crear `AGENTS.md` en el repositorio de código con las reglas permanentes para agentes.
-2. Ejecutar Bloque 3: crear la superficie PostgreSQL `mcp.vw_historico_vehiculos`.
-3. Validar conversiones seguras de latitud y longitud.
-4. Validar consultas con una y varias placas y rangos de fecha.
-5. No implementar todavía catálogo JSON, repository, Tool ni transportes.
+1. Ejecutar Bloque 4: catálogo JSON de eventos.
+2. Crear `src/domains/operacion/catalogs/eventos-vehiculo.json`.
+3. Implementar normalización de eventos conocidos, desconocidos y vacíos.
+4. Mantener sin cambios la View PostgreSQL.
+5. No implementar todavía repository, cursor, Tool ni transportes.
+
+## Bloque 3 — Resultado
+
+**Estado: CERRADO**
+
+Se creó y validó:
+
+```text
+mcp.vw_historico_vehiculos
+```
+
+La View expone:
+
+```text
+id_interno
+placa
+fecha_hora
+latitud
+longitud
+direccion
+velocidad
+evento_valor_origen
+```
+
+Validaciones realizadas:
+
+- latitud convertida de forma segura y limitada a [-90, 90];
+- longitud convertida de forma segura y limitada a [-180, 180];
+- valores inválidos convertidos a NULL;
+- `tso_fecha_server` no expuesto;
+- evento conservado en su valor original;
+- View creada correctamente en PostgreSQL;
+- consulta real de 20 registros validada;
+- índice existente `(tso_placa, tso_fecha_hora)` utilizado por PostgreSQL;
+- 1 placa × 1 día: ~1.36 ms;
+- 1 placa × 30 días: ~1.18 s en primera lectura con I/O y ~12 ms en caché;
+- no se requieren índices adicionales para el MVP.
+
+La paginación futura utilizará cursor lógico basado en:
+
+```text
+fecha_hora
+placa
+```
 
 ## Bloque 2 — Resultado
 
@@ -112,4 +156,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Crear AGENTS.md y ejecutar el Bloque 3: superficie PostgreSQL del histórico.**
+**Ejecutar el Bloque 4: catálogo JSON de eventos.**
