@@ -487,6 +487,137 @@ Pendiente: una invocación real debe completar el flujo MCP → Tool → Reposit
 
 ---
 
+# 11.5. Bloque 7.5 — Refactor de responsabilidades
+
+## Momento de ejecución
+
+Ejecutar únicamente después de cerrar completamente el Bloque 7 y antes de iniciar el Bloque 8.
+
+## Objetivo
+
+Refactorizar la Tool de histórico sin cambiar comportamiento observable, separando responsabilidades que ya demostraron suficiente complejidad.
+
+Estructura objetivo:
+
+```text
+src/domains/operacion/
+├── tools/
+│   └── vehicle-history.tool.ts
+├── contracts/
+│   └── vehicle-history.contract.ts
+├── services/
+│   └── vehicle-history.service.ts
+├── repositories/
+│   ├── vehicle-history.repository.ts
+│   └── vehicle-history.cursor.ts
+└── catalogs/
+    ├── eventos-vehiculo.json
+    └── vehicle-events.catalog.ts
+```
+
+## Responsabilidades
+
+### Tool
+
+Debe contener únicamente:
+
+- metadata MCP;
+- registro de la Tool;
+- uso del Contract;
+- invocación del Service;
+- traducción de errores al resultado MCP.
+
+### Contract
+
+Debe contener:
+
+- schema Zod de entrada;
+- schema Zod de salida;
+- tipos TypeScript derivados de Zod;
+- constantes contractuales estrictamente relacionadas con entrada/salida cuando corresponda.
+
+No duplicar tipos manuales que puedan derivarse de Zod.
+
+### Service
+
+Debe contener la orquestación del caso de uso:
+
+- normalización de fechas hacia America/Bogota;
+- llamada al repository;
+- normalización de eventos;
+- construcción del resultado funcional;
+- serialización de fecha de salida con offset -05:00.
+
+No debe conocer stdio ni HTTP.
+
+### Repository
+
+Permanece responsable de:
+
+- SQL;
+- parámetros;
+- cursor;
+- paginación;
+- acceso a PostgreSQL.
+
+## Restricciones
+
+- no cambiar el contrato MCP;
+- no cambiar schemas públicos;
+- no cambiar SQL;
+- no cambiar cursor;
+- no cambiar catálogo;
+- no agregar dependencias;
+- no crear Controller;
+- no crear helpers/utils genéricos;
+- no avanzar a HTTP.
+
+## AGENTS.md
+
+Actualizar `AGENTS.md` del repositorio de código con una regla permanente que documente:
+
+```text
+Tool = adaptador MCP
+Contract = contrato Zod público
+Service = caso de uso/orquestación
+Repository = acceso a datos
+Catalog = conocimiento estático de dominio
+Transport = mecanismo MCP
+```
+
+Añadir explícitamente:
+
+- aplicar Single Responsibility Principle;
+- componentizar solo cuando exista responsabilidad separable;
+- no crear capas por convención;
+- no crear Controller adicional para Tools MCP;
+- evitar helpers/utils/common genéricos;
+- derivar tipos TypeScript desde Zod cuando el contrato ya esté definido en Zod;
+- preservar comportamiento durante refactors;
+- refactors arquitectónicos requieren decisión previa documentada.
+
+## Tests
+
+Mantener todos los tests existentes y adaptar su ubicación/dependencias.
+
+Agregar tests del Service cuando corresponda.
+
+Validar:
+
+```text
+npm run build
+npm test
+npm run db:check
+```
+
+El número de tests no debe disminuir sin justificación explícita.
+
+## Criterio de cierre
+
+El comportamiento observable de la Tool permanece idéntico, pero las responsabilidades quedan separadas según DEC-024 y `AGENTS.md` refleja la regla.
+
+---
+
 # 12. Bloque 8 — Streamable HTTP
 
 ## Objetivo
