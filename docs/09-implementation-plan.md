@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0, 1, 2 y 3 cerrados / Bloque 4 listo para ejecutar  
+**Estado:** Bloques 0, 1, 2, 3 y 4 cerrados / Bloque 5 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -297,77 +297,41 @@ Cumplido.
 
 # 8. Bloque 4 — Catálogo JSON de eventos
 
-## Objetivo
+**Estado: CERRADO**
 
-Implementar la normalización Proing del evento dentro del dominio de Operación.
+## Resultado
 
-## Archivo
+Se implementó:
 
 ```text
 src/domains/operacion/catalogs/eventos-vehiculo.json
+src/domains/operacion/catalogs/vehicle-events.catalog.ts
+tests/vehicle-events.catalog.test.ts
 ```
 
-Cada entrada deberá contener:
+El catálogo contiene 27 eventos y la normalización:
 
-```json
-{
-  "valor_origen": "Ignition ON",
-  "codigo": "ENCENDIDO",
-  "nombre": "Encendido",
-  "descripcion": ""
-}
-```
+- conserva `valor_origen`;
+- utiliza lookup exacto y determinístico;
+- normaliza variantes de pánico;
+- devuelve `NO_CATALOGADO` para valores desconocidos;
+- devuelve `SIN_EVENTO` para null/vacío/espacios;
+- mantiene `descripcion` vacía en V1.
 
-El catálogo debe incluir todos los valores definidos en `docs/03-tools.md`.
+Se habilitó `resolveJsonModule` para importar el catálogo JSON.
 
-## Comportamiento
-
-Evento conocido:
+Validaciones:
 
 ```text
-Ignition ON
-→ ENCENDIDO
-→ Encendido
+npm run build → exitoso
+npm test      → 18 aprobados / 0 fallidos
 ```
 
-Evento nuevo no catalogado:
-
-```text
-codigo = NO_CATALOGADO
-nombre = Evento no catalogado
-valor_origen = valor recibido
-descripcion = ""
-```
-
-Evento nulo o vacío:
-
-```text
-codigo = SIN_EVENTO
-nombre = Sin evento
-valor_origen = null
-descripcion = ""
-```
-
-## Reglas
-
-- conservar siempre el valor original cuando exista;
-- no fallar por evento desconocido;
-- la búsqueda debe ser determinística;
-- no modificar PostgreSQL para resolver este catálogo en el MVP.
-
-## Tests mínimos
-
-- evento conocido;
-- `PANICO`;
-- `PÁNICO`;
-- `Panic button`;
-- evento desconocido;
-- null;
-- string vacío.
+No se modificaron PostgreSQL, View, repository, cursor, Tool ni transportes.
 
 ## Criterio de cierre
 
-El dominio puede transformar cualquier `tso_evento` válido, desconocido o vacío al contrato definido.
+Cumplido.
 
 ---
 
