@@ -326,3 +326,24 @@ El costo principal observado en la primera lectura de 30 días provino de I/O de
 ### Regla
 
 No se agregará un índice nuevo hasta que el uso real o futuras mediciones demuestren una necesidad concreta.
+
+
+---
+
+## DEC-021 — Fecha histórica como texto local en la capa de datos
+
+**Estado:** Aprobada
+
+El repository de histórico obtiene `fecha_hora` desde PostgreSQL como texto local explícito con microsegundos:
+
+```text
+YYYY-MM-DDTHH:mm:ss.ffffff
+```
+
+No se crea un objeto JavaScript `Date` a partir del `timestamp without time zone` de PostgreSQL.
+
+### Motivo
+
+Evitar conversiones implícitas de zona horaria dependientes de Node.js, sistema operativo o configuración del proceso.
+
+La capa pública de la Tool será responsable de añadir el offset aprobado de Colombia (`-05:00`) al serializar la respuesta MCP.
