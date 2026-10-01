@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0–6 cerrados / Bloque 7 implementado y pendiente de validación real  
+**Estado:** Bloques 0–7 cerrados / Bloque 7.5 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -434,56 +434,39 @@ Cumplido.
 
 # 11. Bloque 7 — Servidor MCP y transporte stdio
 
-**Estado: PENDIENTE DE VALIDACIÓN REAL**
+**Estado: CERRADO**
 
-## Resultado implementado
+## Resultado
 
-Se implementó:
+Se implementó y validó:
 
-```text
-src/server/create-server.ts
-src/transports/stdio.ts
-tests/create-server.test.ts
-tests/stdio.test.ts
-```
+- servidor MCP reusable con `McpServer`;
+- registro único de `operacion.consultar_historico_vehiculos`;
+- transporte `StdioServerTransport`;
+- protección estricta de stdout;
+- cierre idempotente de servidor y pool;
+- manejo de SIGINT/SIGTERM;
+- `tools/list` validado mediante MCP Inspector;
+- invocación real exitosa contra PostgreSQL;
+- respuesta real con eventos normalizados, coordenadas y fechas `-05:00`;
+- manejo de error `INVALID_CURSOR` mediante `isError: true`;
+- errores sin `structuredContent`, evitando validación contra el `outputSchema` exitoso.
 
-Características:
-
-- `McpServer({ name, version })`;
-- registro único de la Tool existente;
-- `StdioServerTransport`;
-- `server.connect(transport)`;
-- cierre de servidor y pool PostgreSQL;
-- manejo idempotente de SIGINT/SIGTERM;
-- stdout reservado al protocolo MCP;
-- errores de arranque enviados a stderr;
-- `tools/list` validado con MCP Inspector 2.5.0.
-
-Validaciones:
+Validaciones finales:
 
 ```text
 npm run build    → exitoso
-npm test         → 68 aprobados / 0 fallidos
+npm test         → 70 aprobados / 0 fallidos
 npm run db:check → exitoso
 tools/list       → exitoso
+tools/call       → exitoso
 ```
 
-## Pendientes antes de cerrar
-
-1. Conceder al usuario MCP acceso de lectura a la View:
-
-```sql
-GRANT USAGE ON SCHEMA mcp TO <usuario_mcp>;
-GRANT SELECT ON mcp.vw_historico_vehiculos TO <usuario_mcp>;
-```
-
-2. En resultados con `isError: true`, no incluir `structuredContent`. Los clientes MCP pueden validar cualquier `structuredContent` presente contra `outputSchema`, incluso cuando el resultado representa un error.
-
-3. Repetir una invocación real de la Tool mediante un cliente MCP.
+El MCP local por stdio queda funcional de punta a punta.
 
 ## Criterio de cierre
 
-Pendiente: una invocación real debe completar el flujo MCP → Tool → Repository → View → PostgreSQL sin errores de permisos ni validación de schema.
+Cumplido.
 
 ---
 
