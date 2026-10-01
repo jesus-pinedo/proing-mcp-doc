@@ -48,7 +48,10 @@
 2. Ajustar las respuestas de error de la Tool para no incluir `structuredContent` cuando `isError = true`.
 3. Repetir una invocación real mediante MCP Inspector.
 4. Confirmar que la invocación exitosa devuelve datos o resultado vacío sin error de schema.
-5. Solo entonces cerrar formalmente el Bloque 7 y avanzar al Bloque 8.
+5. Solo entonces cerrar formalmente el Bloque 7.
+6. Ejecutar Bloque 7.5: refactor de responsabilidades Tool / Contract / Service.
+7. Actualizar `AGENTS.md` con la regla arquitectónica aprobada.
+8. Después avanzar al Bloque 8.
 
 ## Bloque 7 — Estado
 
