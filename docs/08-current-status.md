@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0, 1, 2 y 3 cerrados / listo para iniciar Bloque 4 del MVP técnico**
+**Bloques 0, 1, 2, 3 y 4 cerrados / listo para iniciar Bloque 5 del MVP técnico**
 
 ## Ya definido
 
@@ -44,11 +44,33 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 4: catálogo JSON de eventos.
-2. Crear `src/domains/operacion/catalogs/eventos-vehiculo.json`.
-3. Implementar normalización de eventos conocidos, desconocidos y vacíos.
-4. Mantener sin cambios la View PostgreSQL.
-5. No implementar todavía repository, cursor, Tool ni transportes.
+1. Ejecutar Bloque 5: repository y paginación por cursor.
+2. Consultar exclusivamente `mcp.vw_historico_vehiculos`.
+3. Implementar keyset pagination con `fecha_hora + placa`.
+4. Aplicar `LIMIT N + 1` para calcular `has_more`.
+5. Mantener SQL parametrizado.
+6. No implementar todavía Tool MCP ni transportes.
+
+## Bloque 4 — Resultado
+
+**Estado: CERRADO**
+
+Implementación reportada:
+
+- catálogo JSON con 27 eventos;
+- `src/domains/operacion/catalogs/eventos-vehiculo.json`;
+- resolver de dominio en `vehicle-events.catalog.ts`;
+- lookup exacto y determinístico mediante `Map`;
+- equivalencias `PANICO`, `PÁNICO` y `Panic button` → `PANICO / Pánico`;
+- eventos desconocidos → `NO_CATALOGADO`;
+- null/vacío/espacios → `SIN_EVENTO`;
+- valor original preservado;
+- descripciones vacías en V1;
+- `resolveJsonModule` habilitado en TypeScript;
+- sin dependencias nuevas;
+- `npm run build`: exitoso;
+- `npm test`: 18 aprobados, 0 fallidos;
+- no se avanzó a repository, cursor, Tool ni transportes.
 
 ## Bloque 3 — Resultado
 
@@ -156,4 +178,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Ejecutar el Bloque 4: catálogo JSON de eventos.**
+**Ejecutar el Bloque 5: repository y paginación por cursor.**
