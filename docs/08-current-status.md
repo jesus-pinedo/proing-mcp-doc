@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0–7.5 cerrados / listo para iniciar Bloque 8 — Streamable HTTP**
+**Bloques 0–8 cerrados / listo para iniciar Bloque 9 — tests finales del MVP**
 
 ## Ya definido
 
@@ -44,12 +44,42 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 8: Streamable HTTP.
-2. Reutilizar exactamente el mismo `createProingServer()`.
-3. No duplicar Tool, Contract, Service, Repository ni catálogo.
-4. Exponer un endpoint local `/mcp`.
-5. Mantener `stdio` funcionando sin cambios.
-6. No implementar todavía autenticación productiva.
+1. Ejecutar Bloque 9: revisión y cobertura final de tests.
+2. Auditar casos críticos ya cubiertos y detectar vacíos reales.
+3. Agregar únicamente tests que aporten cobertura significativa.
+4. Verificar conjuntamente stdio y Streamable HTTP.
+5. Mantener tests automatizados independientes de PostgreSQL real.
+6. No avanzar todavía a la validación con agente del Bloque 10.
+
+## Bloque 8 — Resultado
+
+**Estado: CERRADO**
+
+Implementación reportada:
+
+- `src/transports/http.ts`;
+- `src/transports/lifecycle.ts`;
+- reutilización del lifecycle desde `stdio`;
+- `@modelcontextprotocol/node@2.1.0`;
+- `createMcpHandler(..., { legacy: "stateless" })`;
+- `toNodeHandler(...)`;
+- `localhostHostValidation()`;
+- `localhostOriginValidation()`;
+- servidor nativo `node:http`;
+- escucha exclusiva en `127.0.0.1`;
+- endpoint único `/mcp`;
+- rutas diferentes → 404;
+- pool PostgreSQL singleton compartido;
+- `createProingServer()` reutilizado por request;
+- sin sesiones MCP propias;
+- cierre HTTP idempotente;
+- `npm run mcp:http` agregado;
+- `npm run build`: exitoso;
+- `npm test`: 78 aprobados, 0 fallidos;
+- `npm run db:check`: exitoso;
+- `tools/list` por HTTP: exitoso;
+- `tools/call` real por HTTP: exitoso;
+- `stdio` continúa funcionando.
 
 ## Bloque 7.5 — Resultado
 
