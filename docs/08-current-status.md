@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0, 1, 2, 3 y 4 cerrados / listo para iniciar Bloque 5 del MVP técnico**
+**Bloques 0, 1, 2, 3, 4 y 5 cerrados / listo para iniciar Bloque 6 del MVP técnico**
 
 ## Ya definido
 
@@ -44,12 +44,38 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 5: repository y paginación por cursor.
-2. Consultar exclusivamente `mcp.vw_historico_vehiculos`.
-3. Implementar keyset pagination con `fecha_hora + placa`.
-4. Aplicar `LIMIT N + 1` para calcular `has_more`.
-5. Mantener SQL parametrizado.
-6. No implementar todavía Tool MCP ni transportes.
+1. Ejecutar Bloque 6: Tool MCP.
+2. Definir schema Zod público de entrada.
+3. Construir la respuesta pública documentada.
+4. Aplicar normalización del catálogo de eventos a los registros.
+5. Serializar `fecha_hora` con offset `-05:00`.
+6. Mantener el repository sin conocimiento de MCP.
+7. No implementar todavía transportes `stdio` ni Streamable HTTP.
+
+## Bloque 5 — Resultado
+
+**Estado: CERRADO**
+
+Implementación reportada:
+
+- `vehicle-history.repository.ts`;
+- `vehicle-history.cursor.ts`;
+- tests dedicados de repository y cursor;
+- keyset pagination sin `OFFSET`;
+- cursor opaco base64url versionado;
+- cursor basado únicamente en `fecha_hora + placa`;
+- SQL parametrizado;
+- consulta exclusiva de `mcp.vw_historico_vehiculos`;
+- orden `fecha_hora ASC, placa ASC`;
+- patrón `LIMIT N + 1`;
+- sin `COUNT(*)`;
+- fecha histórica obtenida como texto local con microsegundos mediante `to_char`;
+- sin conversión automática a `Date`/UTC;
+- evento devuelto aún como valor original;
+- repository testeable mediante una frontera mínima inyectable;
+- `npm run build`: exitoso;
+- `npm test`: 37 aprobados, 0 fallidos;
+- no se avanzó a Tool ni transportes.
 
 ## Bloque 4 — Resultado
 
@@ -178,4 +204,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Ejecutar el Bloque 5: repository y paginación por cursor.**
+**Ejecutar el Bloque 6: Tool MCP y construcción del contrato público.**
