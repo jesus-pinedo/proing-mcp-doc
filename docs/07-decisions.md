@@ -347,3 +347,37 @@ No se crea un objeto JavaScript `Date` a partir del `timestamp without time zone
 Evitar conversiones implícitas de zona horaria dependientes de Node.js, sistema operativo o configuración del proceso.
 
 La capa pública de la Tool será responsable de añadir el offset aprobado de Colombia (`-05:00`) al serializar la respuesta MCP.
+
+
+---
+
+## DEC-022 — INVALID_CURSOR como error funcional
+
+**Estado:** Aprobada
+
+La Tool `operacion.consultar_historico_vehiculos` incorpora el código de error:
+
+```text
+INVALID_CURSOR
+```
+
+para cursores corruptos, estructuralmente inválidos o no soportados.
+
+El error debe ser controlado y no exponer detalles internos de codificación.
+
+---
+
+## DEC-023 — Schema estricto de salida para la Tool
+
+**Estado:** Aprobada
+
+La primera Tool define y valida también su contrato público de salida mediante Zod.
+
+### Motivo
+
+- evitar fugas accidentales de campos internos;
+- mantener estable el contrato MCP;
+- detectar desviaciones entre repository, transformación de dominio y respuesta pública;
+- facilitar pruebas automatizadas del contrato.
+
+Esto no implica crear una capa genérica de schemas para futuras Tools; cada Tool podrá definir únicamente lo necesario.
