@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0, 1, 2, 3, 4 y 5 cerrados / Bloque 6 listo para ejecutar  
+**Estado:** Bloques 0, 1, 2, 3, 4, 5 y 6 cerrados / Bloque 7 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -382,79 +382,53 @@ Cumplido.
 
 # 10. Bloque 6 — Tool MCP
 
-## Objetivo
+**Estado: CERRADO**
 
-Registrar la Tool:
+## Resultado
+
+Se implementó:
 
 ```text
-operacion.consultar_historico_vehiculos
+src/domains/operacion/tools/vehicle-history.tool.ts
+tests/vehicle-history.tool.test.ts
 ```
 
-## Contrato
+La Tool:
 
-Seguir exactamente `docs/03-tools.md`.
+- expone `operacion.consultar_historico_vehiculos`;
+- valida entrada con Zod;
+- valida salida con Zod;
+- soporta una o varias placas;
+- aplica límite de 31 días;
+- usa page size 1000 por defecto y 5000 máximo;
+- acepta cursor opcional;
+- normaliza fechas de entrada hacia `America/Bogota`;
+- conserva microsegundos y añade `-05:00` en salida;
+- utiliza únicamente el repository existente;
+- aplica el catálogo de eventos existente;
+- no contiene SQL ni acceso directo a PostgreSQL.
 
-Entrada:
-
-```text
-placas
-fecha_inicio
-fecha_fin
-limit?
-cursor?
-```
-
-Salida:
-
-```text
-consulta
-paginacion
-registros[]
-```
-
-Cada registro debe devolver:
+Errores controlados:
 
 ```text
-placa
-fecha_hora
-latitud
-longitud
-direccion
-velocidad
-evento {
-  codigo
-  nombre
-  valor_origen
-  descripcion
-}
-```
-
-## Validaciones Zod
-
-Como mínimo:
-
-- `placas` no vacío;
-- fechas válidas;
-- `fecha_inicio <= fecha_fin`;
-- máximo 31 días;
-- `limit` dentro de valores permitidos;
-- cursor válido cuando exista.
-
-## Errores funcionales
-
-Implementar los códigos documentados:
-
-```text
-INVALID_DATE_RANGE
 INVALID_PLATES
+INVALID_DATE_RANGE
+INVALID_CURSOR
 DATA_SOURCE_ERROR
 ```
 
-Sin resultados no es error.
+Validaciones:
+
+```text
+npm run build → exitoso
+npm test      → 60 aprobados / 0 fallidos
+```
+
+No se implementaron servidor ni transportes.
 
 ## Criterio de cierre
 
-La Tool puede invocarse programáticamente y devuelve exactamente el contrato documentado.
+Cumplido.
 
 ---
 
