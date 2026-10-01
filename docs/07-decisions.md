@@ -265,3 +265,64 @@ DATABASE_USER
 DATABASE_PASSWORD
 APP_TIMEZONE=America/Bogota
 ```
+
+
+---
+
+## DEC-019 — Cursor basado en fecha_hora + placa
+
+**Estado:** Aprobada
+
+La paginación de `operacion.consultar_historico_vehiculos` utilizará como clave lógica:
+
+```text
+fecha_hora
+placa
+```
+
+No se incluirá `id_interno` en el cursor.
+
+### Motivo
+
+La tabla fuente posee una restricción única sobre:
+
+```text
+(tso_placa, tso_fecha_hora)
+```
+
+Por lo tanto, la combinación lógica `(fecha_hora, placa)` identifica de forma determinística cada registro consultable y permite simplificar el cursor.
+
+---
+
+## DEC-020 — No crear índice adicional para el MVP
+
+**Estado:** Aprobada
+
+No se crearán índices adicionales para la primera versión.
+
+### Evidencia
+
+El índice existente:
+
+```text
+UNIQUE (tso_placa, tso_fecha_hora)
+```
+
+fue utilizado correctamente por PostgreSQL en las pruebas.
+
+Resultados observados:
+
+```text
+1 placa × 1 día:
+Execution Time ≈ 1.36 ms
+
+1 placa × 30 días:
+primera lectura con bloques desde disco ≈ 1.18 s
+segunda lectura con bloques en caché ≈ 12 ms
+```
+
+El costo principal observado en la primera lectura de 30 días provino de I/O de disco, no de la búsqueda por índice.
+
+### Regla
+
+No se agregará un índice nuevo hasta que el uso real o futuras mediciones demuestren una necesidad concreta.
