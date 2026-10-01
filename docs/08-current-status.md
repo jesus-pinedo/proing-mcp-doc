@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0–6 cerrados / Bloque 7 implementado y pendiente de validación real de invocación**
+**Bloques 0–7 cerrados / listo para ejecutar Bloque 7.5 de refactor controlado**
 
 ## Ya definido
 
@@ -44,18 +44,15 @@
 
 ## Pendientes inmediatos
 
-1. Conceder al usuario read-only del MCP `USAGE` sobre schema `mcp` y `SELECT` sobre `mcp.vw_historico_vehiculos`.
-2. Ajustar las respuestas de error de la Tool para no incluir `structuredContent` cuando `isError = true`.
-3. Repetir una invocación real mediante MCP Inspector.
-4. Confirmar que la invocación exitosa devuelve datos o resultado vacío sin error de schema.
-5. Solo entonces cerrar formalmente el Bloque 7.
-6. Ejecutar Bloque 7.5: refactor de responsabilidades Tool / Contract / Service.
-7. Actualizar `AGENTS.md` con la regla arquitectónica aprobada.
-8. Después avanzar al Bloque 8.
+1. Ejecutar Bloque 7.5: refactor Tool / Contract / Service / Repository.
+2. Actualizar `AGENTS.md` con la regla arquitectónica permanente.
+3. Preservar exactamente el comportamiento del Bloque 7.
+4. Mantener todos los tests en verde.
+5. No implementar todavía Streamable HTTP.
 
-## Bloque 7 — Estado
+## Bloque 7 — Resultado
 
-**Estado: PENDIENTE DE VALIDACIÓN REAL**
+**Estado: CERRADO**
 
 Implementado:
 
@@ -70,10 +67,20 @@ Implementado:
 - `npm test`: 68 aprobados, 0 fallidos;
 - `npm run db:check`: exitoso.
 
-Pendientes detectados:
+Validación final:
 
-- el usuario actual de `.env` no tiene permisos sobre `mcp.vw_historico_vehiculos`;
-- una respuesta de error con `structuredContent` puede provocar validación de `outputSchema` en clientes MCP. Para errores se debe devolver `isError: true` con `content` y sin `structuredContent`.
+- invocación real exitosa mediante MCP Inspector contra PostgreSQL;
+- 66 registros reales devueltos para una consulta de un día;
+- eventos normalizados correctamente;
+- fechas con offset `-05:00`;
+- coordenadas numéricas;
+- respuesta exitosa validada contra `outputSchema`;
+- cursor inválido devuelve `INVALID_CURSOR` con `isError: true`;
+- respuestas de error ya no incluyen `structuredContent`;
+- MCP Inspector reporta `tool_is_error` como comportamiento esperado para `isError: true`, sin error adicional de schema;
+- `npm run build`: exitoso;
+- `npm test`: 70 aprobados, 0 fallidos;
+- `npm run db:check`: exitoso.
 
 ## Bloque 6 — Resultado
 
