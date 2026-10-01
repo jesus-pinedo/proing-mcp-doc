@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0, 1, 2, 3, 4 y 5 cerrados / listo para iniciar Bloque 6 del MVP técnico**
+**Bloques 0, 1, 2, 3, 4, 5 y 6 cerrados / listo para iniciar Bloque 7 del MVP técnico**
 
 ## Ya definido
 
@@ -44,13 +44,35 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 6: Tool MCP.
-2. Definir schema Zod público de entrada.
-3. Construir la respuesta pública documentada.
-4. Aplicar normalización del catálogo de eventos a los registros.
-5. Serializar `fecha_hora` con offset `-05:00`.
-6. Mantener el repository sin conocimiento de MCP.
-7. No implementar todavía transportes `stdio` ni Streamable HTTP.
+1. Ejecutar Bloque 7: servidor MCP y transporte `stdio`.
+2. Crear el servidor MCP reutilizable.
+3. Registrar `operacion.consultar_historico_vehiculos`.
+4. Conectar el transporte local `stdio`.
+5. Validar descubrimiento e invocación desde un cliente MCP local.
+6. No implementar todavía Streamable HTTP.
+
+## Bloque 6 — Resultado
+
+**Estado: CERRADO**
+
+Implementación reportada:
+
+- `vehicle-history.tool.ts`;
+- schema Zod estricto de entrada;
+- schema Zod estricto de salida;
+- nombre público `operacion.consultar_historico_vehiculos`;
+- metadata orientada a negocio;
+- Tool marcada como read-only;
+- normalización de entrada hacia `America/Bogota`;
+- serialización de salida con offset `-05:00`;
+- microsegundos preservados;
+- integración exclusiva con `VehicleHistoryRepository`;
+- normalización mediante el catálogo existente;
+- errores `INVALID_PLATES`, `INVALID_DATE_RANGE`, `INVALID_CURSOR` y `DATA_SOURCE_ERROR`;
+- `registerVehicleHistoryTool(server, dependencies)` preparado para el servidor;
+- sin servidor, stdio ni HTTP;
+- `npm run build`: exitoso;
+- `npm test`: 60 aprobados, 0 fallidos.
 
 ## Bloque 5 — Resultado
 
@@ -204,4 +226,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Ejecutar el Bloque 6: Tool MCP y construcción del contrato público.**
+**Ejecutar el Bloque 7: servidor MCP y transporte local stdio.**
