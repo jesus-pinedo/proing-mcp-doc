@@ -454,3 +454,60 @@ INVALID_DATE_RANGE
 INVALID_CURSOR
 DATA_SOURCE_ERROR
 ```
+
+
+---
+
+## DEC-026 — Streamable HTTP stateless para la V1
+
+**Estado:** Aprobada
+
+La V1 expone el MCP remoto mediante Streamable HTTP en modalidad stateless.
+
+Implementación:
+
+```text
+createMcpHandler(factory, { legacy: "stateless" })
+        ↓
+toNodeHandler(...)
+        ↓
+node:http
+```
+
+El factory crea un `McpServer` por petición, mientras el repository y el pool PostgreSQL se reutilizan.
+
+No se incorporan sesiones propias, session store, event store, Redis ni resumabilidad en la V1.
+
+---
+
+## DEC-027 — Adaptador oficial Node para Streamable HTTP
+
+**Estado:** Aprobada
+
+Se utiliza:
+
+```text
+@modelcontextprotocol/node@2.1.0
+```
+
+como adaptador oficial para `node:http`.
+
+La dependencia es compatible con `@modelcontextprotocol/server@2.2.0`.
+
+Aunque el adaptador incluye Hono como dependencia transitiva, Proing MCP no utiliza Hono directamente ni adopta Hono como framework de aplicación.
+
+---
+
+## DEC-028 — HTTP local restringido a localhost durante el MVP
+
+**Estado:** Aprobada
+
+Durante el MVP local, Streamable HTTP escucha únicamente en:
+
+```text
+127.0.0.1
+```
+
+y aplica validación de Host y Origin mediante las utilidades oficiales del adaptador Node.
+
+No se implementan todavía autenticación, OAuth, TLS, CORS genérico ni exposición en `0.0.0.0`.
