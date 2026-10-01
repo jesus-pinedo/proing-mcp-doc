@@ -464,11 +464,17 @@ proing-mcp/
 │   ├── domains/
 │   │   └── operacion/
 │   │       ├── tools/
-│   │       │   └── consultar-historico-vehiculo.ts
+│   │       │   └── vehicle-history.tool.ts
+│   │       ├── contracts/
+│   │       │   └── vehicle-history.contract.ts
+│   │       ├── services/
+│   │       │   └── vehicle-history.service.ts
 │   │       ├── repositories/
-│   │       │   └── historico-vehiculo.repository.ts
+│   │       │   ├── vehicle-history.repository.ts
+│   │       │   └── vehicle-history.cursor.ts
 │   │       └── catalogs/
-│   │           └── eventos-vehiculo.json
+│   │           ├── eventos-vehiculo.json
+│   │           └── vehicle-events.catalog.ts
 │   │
 │   ├── infrastructure/
 │   │   └── database/
@@ -493,6 +499,39 @@ proing-mcp/
 ```
 
 La estructura debe mantenerse pequeña. No se incorporarán capas adicionales sin una necesidad concreta.
+
+### Regla de responsabilidad por capa
+
+Cuando la complejidad de una Tool lo justifique, se aplicará la siguiente separación:
+
+```text
+Transport
+   ↓
+MCP Server
+   ↓
+Tool
+   ↓
+Contract
+   ↓
+Service
+   ↓
+Repository
+   ↓
+PostgreSQL / API
+```
+
+Responsabilidades:
+
+- **Tool**: frontera MCP, metadata, registro y traducción de errores al protocolo.
+- **Contract**: schemas Zod de entrada/salida y tipos derivados del contrato público.
+- **Service**: orquestación del caso de uso y reglas de aplicación.
+- **Repository**: acceso a datos, SQL parametrizado y paginación.
+- **Catalog**: normalización de conocimiento estático del dominio.
+- **Transport**: mecanismo de conexión MCP, sin lógica de dominio.
+
+No todas las Tools requieren obligatoriamente un Service. La capa se introduce cuando existe lógica de aplicación suficiente para justificarla.
+
+Se evitarán carpetas genéricas como `helpers/`, `utils/` o `common/` cuando oculten responsabilidades. Los componentes compartidos solo se crearán cuando exista reutilización real.
 
 ---
 
