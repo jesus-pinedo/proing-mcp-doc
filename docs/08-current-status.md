@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0–8 cerrados / listo para iniciar Bloque 9 — tests finales del MVP**
+**Bloques 0–9 cerrados / listo para iniciar Bloque 10 — validación con agente real**
 
 ## Ya definido
 
@@ -44,12 +44,37 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 9: revisión y cobertura final de tests.
-2. Auditar casos críticos ya cubiertos y detectar vacíos reales.
-3. Agregar únicamente tests que aporten cobertura significativa.
-4. Verificar conjuntamente stdio y Streamable HTTP.
-5. Mantener tests automatizados independientes de PostgreSQL real.
-6. No avanzar todavía a la validación con agente del Bloque 10.
+1. Ejecutar Bloque 10: validar el MCP desde un agente real.
+2. Confirmar selección autónoma de la Tool desde lenguaje natural.
+3. Confirmar construcción correcta de placas y rango de fechas.
+4. Validar seguimiento de `next_cursor` cuando exista otra página.
+5. Validar análisis de eventos y coordenadas por parte del agente.
+6. No realizar todavía optimizaciones de rendimiento ni cambios de arquitectura.
+
+## Bloque 9 — Resultado
+
+**Estado: CERRADO**
+
+Auditoría final de cobertura realizada.
+
+Resultado:
+
+- tests antes: 78;
+- tests después: 82;
+- 0 fallidos;
+- no se modificó código funcional;
+- se reforzaron límites de paginación;
+- se agregó rechazo explícito de campos adicionales;
+- se reforzó validación de cursor;
+- se fortaleció integración MCP completa en memoria;
+- se demostró factory-per-request en HTTP con repository compartido;
+- metadata de Tool validada incluyendo `title` y `readOnlyHint`;
+- `npm run build`: exitoso;
+- `npm test`: 82 aprobados, 0 fallidos;
+- `npm run db:check`: exitoso;
+- entrypoints stdio y HTTP confirmados.
+
+No se detectaron bugs funcionales.
 
 ## Bloque 8 — Resultado
 
