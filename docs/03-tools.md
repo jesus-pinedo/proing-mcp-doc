@@ -368,6 +368,12 @@ Se utiliza cuando:
 - el formato de las placas no es válido;
 - se supera el máximo de placas configurado.
 
+### INVALID_CURSOR
+
+Se utiliza cuando el cursor suministrado no puede decodificarse, tiene una estructura inválida o no corresponde a la versión soportada.
+
+La respuesta debe ser controlada y no exponer detalles internos del cursor.
+
 ### DATA_SOURCE_ERROR
 
 Error controlado de acceso a PostgreSQL.
