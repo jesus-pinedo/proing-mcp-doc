@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0–7 cerrados / listo para ejecutar Bloque 7.5 de refactor controlado**
+**Bloques 0–7.5 cerrados / listo para iniciar Bloque 8 — Streamable HTTP**
 
 ## Ya definido
 
@@ -44,11 +44,57 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 7.5: refactor Tool / Contract / Service / Repository.
-2. Actualizar `AGENTS.md` con la regla arquitectónica permanente.
-3. Preservar exactamente el comportamiento del Bloque 7.
-4. Mantener todos los tests en verde.
-5. No implementar todavía Streamable HTTP.
+1. Ejecutar Bloque 8: Streamable HTTP.
+2. Reutilizar exactamente el mismo `createProingServer()`.
+3. No duplicar Tool, Contract, Service, Repository ni catálogo.
+4. Exponer un endpoint local `/mcp`.
+5. Mantener `stdio` funcionando sin cambios.
+6. No implementar todavía autenticación productiva.
+
+## Bloque 7.5 — Resultado
+
+**Estado: CERRADO**
+
+Refactor implementado:
+
+```text
+src/domains/operacion/
+├── tools/
+│   └── vehicle-history.tool.ts
+├── contracts/
+│   └── vehicle-history.contract.ts
+├── services/
+│   └── vehicle-history.service.ts
+├── repositories/
+│   ├── vehicle-history.repository.ts
+│   └── vehicle-history.cursor.ts
+└── catalogs/
+    ├── eventos-vehiculo.json
+    └── vehicle-events.catalog.ts
+```
+
+Responsabilidades finales:
+
+- Tool: adaptación MCP, metadata, registro, invocación del Service y traducción de errores.
+- Contract: schemas Zod públicos, límites contractuales y tipos derivados.
+- Service: caso de uso, fechas Colombia, catálogo, repository y construcción de respuesta.
+- Repository: SQL, parámetros, cursor y paginación.
+- Catalog: conocimiento estático de eventos.
+- Transport: conexión MCP.
+
+Validaciones:
+
+- `AGENTS.md` actualizado con la regla permanente;
+- tests antes: 70;
+- tests después: 72;
+- `npm run build`: exitoso;
+- `npm test`: 72 aprobados, 0 fallidos;
+- `npm run db:check`: exitoso;
+- `tools/list`: exitoso;
+- invocación real exitosa con `limit=2`;
+- `has_more=true` y `next_cursor` presentes;
+- comportamiento MCP preservado;
+- no se modificaron SQL, View, cursor, catálogo, stdio ni dependencias.
 
 ## Bloque 7 — Resultado
 
