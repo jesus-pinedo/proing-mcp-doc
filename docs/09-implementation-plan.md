@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0–7 cerrados / Bloque 7.5 listo para ejecutar  
+**Estado:** Bloques 0–7.5 cerrados / Bloque 8 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -472,132 +472,63 @@ Cumplido.
 
 # 11.5. Bloque 7.5 — Refactor de responsabilidades
 
-## Momento de ejecución
+**Estado: CERRADO**
 
-Ejecutar únicamente después de cerrar completamente el Bloque 7 y antes de iniciar el Bloque 8.
+## Resultado
 
-## Objetivo
-
-Refactorizar la Tool de histórico sin cambiar comportamiento observable, separando responsabilidades que ya demostraron suficiente complejidad.
-
-Estructura objetivo:
+Se implementó la separación aprobada:
 
 ```text
-src/domains/operacion/
-├── tools/
-│   └── vehicle-history.tool.ts
-├── contracts/
-│   └── vehicle-history.contract.ts
-├── services/
-│   └── vehicle-history.service.ts
-├── repositories/
-│   ├── vehicle-history.repository.ts
-│   └── vehicle-history.cursor.ts
-└── catalogs/
-    ├── eventos-vehiculo.json
-    └── vehicle-events.catalog.ts
+Tool
+ ↓
+Contract
+ ↓
+Service
+ ↓
+Repository
 ```
 
-## Responsabilidades
-
-### Tool
-
-Debe contener únicamente:
-
-- metadata MCP;
-- registro de la Tool;
-- uso del Contract;
-- invocación del Service;
-- traducción de errores al resultado MCP.
-
-### Contract
-
-Debe contener:
-
-- schema Zod de entrada;
-- schema Zod de salida;
-- tipos TypeScript derivados de Zod;
-- constantes contractuales estrictamente relacionadas con entrada/salida cuando corresponda.
-
-No duplicar tipos manuales que puedan derivarse de Zod.
-
-### Service
-
-Debe contener la orquestación del caso de uso:
-
-- normalización de fechas hacia America/Bogota;
-- llamada al repository;
-- normalización de eventos;
-- construcción del resultado funcional;
-- serialización de fecha de salida con offset -05:00.
-
-No debe conocer stdio ni HTTP.
-
-### Repository
-
-Permanece responsable de:
-
-- SQL;
-- parámetros;
-- cursor;
-- paginación;
-- acceso a PostgreSQL.
-
-## Restricciones
-
-- no cambiar el contrato MCP;
-- no cambiar schemas públicos;
-- no cambiar SQL;
-- no cambiar cursor;
-- no cambiar catálogo;
-- no agregar dependencias;
-- no crear Controller;
-- no crear helpers/utils genéricos;
-- no avanzar a HTTP.
-
-## AGENTS.md
-
-Actualizar `AGENTS.md` del repositorio de código con una regla permanente que documente:
+Archivos principales:
 
 ```text
-Tool = adaptador MCP
-Contract = contrato Zod público
-Service = caso de uso/orquestación
-Repository = acceso a datos
-Catalog = conocimiento estático de dominio
-Transport = mecanismo MCP
+src/domains/operacion/tools/vehicle-history.tool.ts
+src/domains/operacion/contracts/vehicle-history.contract.ts
+src/domains/operacion/services/vehicle-history.service.ts
+src/domains/operacion/repositories/vehicle-history.repository.ts
+src/domains/operacion/repositories/vehicle-history.cursor.ts
+src/domains/operacion/catalogs/vehicle-events.catalog.ts
 ```
 
-Añadir explícitamente:
+Cambios:
 
-- aplicar Single Responsibility Principle;
-- componentizar solo cuando exista responsabilidad separable;
-- no crear capas por convención;
-- no crear Controller adicional para Tools MCP;
-- evitar helpers/utils/common genéricos;
-- derivar tipos TypeScript desde Zod cuando el contrato ya esté definido en Zod;
-- preservar comportamiento durante refactors;
-- refactors arquitectónicos requieren decisión previa documentada.
+- schemas Zod y tipos públicos movidos a Contract;
+- lógica de fechas, catálogo y composición de respuesta movida a Service;
+- Tool reducida a responsabilidades MCP;
+- Repository sin cambios funcionales;
+- `AGENTS.md` actualizado con SRP y reglas permanentes de capas;
+- no se creó Controller;
+- no se agregaron helpers/utils genéricos;
+- no se añadieron dependencias.
 
-## Tests
-
-Mantener todos los tests existentes y adaptar su ubicación/dependencias.
-
-Agregar tests del Service cuando corresponda.
-
-Validar:
+Validaciones:
 
 ```text
-npm run build
-npm test
-npm run db:check
+npm run build    → exitoso
+npm test         → 72 aprobados / 0 fallidos
+npm run db:check → exitoso
+tools/list       → exitoso
+tools/call real  → exitoso
 ```
 
-El número de tests no debe disminuir sin justificación explícita.
+El comportamiento observable y el contrato MCP permanecen sin cambios.
+
+## Nota sobre repositorios
+
+El repositorio de código y el repositorio documental continúan separados. El Bloque 7.5 está definido en `proing-mcp-doc`; no es requisito duplicar el plan completo dentro del repositorio local de código.
 
 ## Criterio de cierre
 
-El comportamiento observable de la Tool permanece idéntico, pero las responsabilidades quedan separadas según DEC-024 y `AGENTS.md` refleja la regla.
+Cumplido.
 
 ---
 
