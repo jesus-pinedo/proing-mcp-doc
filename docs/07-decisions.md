@@ -381,3 +381,52 @@ La primera Tool define y valida también su contrato público de salida mediante
 - facilitar pruebas automatizadas del contrato.
 
 Esto no implica crear una capa genérica de schemas para futuras Tools; cada Tool podrá definir únicamente lo necesario.
+
+
+---
+
+## DEC-024 — Separación Tool / Contract / Service / Repository
+
+**Estado:** Aprobada
+
+Para Tools con suficiente complejidad, Proing MCP utilizará la siguiente separación de responsabilidades:
+
+```text
+Tool
+ ↓
+Contract
+ ↓
+Service
+ ↓
+Repository
+```
+
+### Responsabilidades
+
+- **Tool**: adaptación al protocolo MCP, metadata, registro, invocación y traducción de errores.
+- **Contract**: schemas Zod públicos de entrada/salida y tipos derivados.
+- **Service**: orquestación del caso de uso, normalización de fechas, composición de respuesta y uso de catálogos.
+- **Repository**: persistencia, SQL, paginación y acceso a fuentes de datos.
+
+### Regla
+
+No se crearán Controllers adicionales para las Tools MCP: la Tool ya representa la frontera equivalente al controller/adaptador.
+
+No todas las Tools requieren Service; se introduce cuando existe lógica de aplicación suficiente para separar responsabilidades.
+
+No se utilizarán carpetas genéricas `helpers`, `utils` o `common` salvo que exista una responsabilidad compartida real y claramente nombrable.
+
+### Aplicación al histórico de vehículos
+
+`vehicle-history.tool.ts` ya concentra validación, transformación, fechas, catálogo y respuesta pública, por lo que se aprueba un refactor controlado hacia:
+
+```text
+tools/vehicle-history.tool.ts
+contracts/vehicle-history.contract.ts
+services/vehicle-history.service.ts
+repositories/vehicle-history.repository.ts
+repositories/vehicle-history.cursor.ts
+catalogs/vehicle-events.catalog.ts
+```
+
+El refactor debe preservar exactamente el comportamiento y contrato existente.
