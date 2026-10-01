@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0, 1, 2, 3, 4, 5 y 6 cerrados / listo para iniciar Bloque 7 del MVP técnico**
+**Bloques 0–6 cerrados / Bloque 7 implementado y pendiente de validación real de invocación**
 
 ## Ya definido
 
@@ -44,12 +44,33 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 7: servidor MCP y transporte `stdio`.
-2. Crear el servidor MCP reutilizable.
-3. Registrar `operacion.consultar_historico_vehiculos`.
-4. Conectar el transporte local `stdio`.
-5. Validar descubrimiento e invocación desde un cliente MCP local.
-6. No implementar todavía Streamable HTTP.
+1. Conceder al usuario read-only del MCP `USAGE` sobre schema `mcp` y `SELECT` sobre `mcp.vw_historico_vehiculos`.
+2. Ajustar las respuestas de error de la Tool para no incluir `structuredContent` cuando `isError = true`.
+3. Repetir una invocación real mediante MCP Inspector.
+4. Confirmar que la invocación exitosa devuelve datos o resultado vacío sin error de schema.
+5. Solo entonces cerrar formalmente el Bloque 7 y avanzar al Bloque 8.
+
+## Bloque 7 — Estado
+
+**Estado: PENDIENTE DE VALIDACIÓN REAL**
+
+Implementado:
+
+- servidor MCP reusable con `McpServer`;
+- registro único de `operacion.consultar_historico_vehiculos`;
+- transporte `StdioServerTransport`;
+- lifecycle y cierre idempotente;
+- protección de stdout;
+- scripts de ejecución;
+- `tools/list` validado con MCP Inspector 2.5.0;
+- `npm run build`: exitoso;
+- `npm test`: 68 aprobados, 0 fallidos;
+- `npm run db:check`: exitoso.
+
+Pendientes detectados:
+
+- el usuario actual de `.env` no tiene permisos sobre `mcp.vw_historico_vehiculos`;
+- una respuesta de error con `structuredContent` puede provocar validación de `outputSchema` en clientes MCP. Para errores se debe devolver `isError: true` con `content` y sin `structuredContent`.
 
 ## Bloque 6 — Resultado
 
