@@ -430,3 +430,27 @@ catalogs/vehicle-events.catalog.ts
 ```
 
 El refactor debe preservar exactamente el comportamiento y contrato existente.
+
+
+---
+
+## DEC-025 — Errores MCP sin structuredContent
+
+**Estado:** Aprobada
+
+Las respuestas exitosas de las Tools pueden incluir `structuredContent` validado contra su `outputSchema`.
+
+Las respuestas de error con `isError: true` no incluirán `structuredContent`; el error se entregará mediante `content` como texto estructurado.
+
+### Motivo
+
+Evitar que clientes MCP validen una estructura de error contra el `outputSchema` definido para respuestas exitosas.
+
+Los errores funcionales conservan su código y mensaje, por ejemplo:
+
+```text
+INVALID_PLATES
+INVALID_DATE_RANGE
+INVALID_CURSOR
+DATA_SOURCE_ERROR
+```
