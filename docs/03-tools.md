@@ -318,7 +318,6 @@ Orden conceptual:
 ```text
 fecha_hora ASC
 placa ASC
-id_interno ASC
 ```
 
 El cursor podrá utilizar internamente:
@@ -326,10 +325,11 @@ El cursor podrá utilizar internamente:
 ```text
 fecha_hora
 placa
-tso_id_
 ```
 
 pero estos detalles no deben quedar expuestos como parámetros editables para el usuario.
+
+La combinación `(placa, fecha_hora)` es única en la tabla fuente, por lo que `id_interno` no es necesario como componente del cursor.
 
 ---
 
