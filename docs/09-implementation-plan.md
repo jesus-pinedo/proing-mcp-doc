@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0, 1, 2, 3, 4, 5 y 6 cerrados / Bloque 7 listo para ejecutar  
+**Estado:** Bloques 0–6 cerrados / Bloque 7 implementado y pendiente de validación real  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -434,42 +434,56 @@ Cumplido.
 
 # 11. Bloque 7 — Servidor MCP y transporte stdio
 
-## Objetivo
+**Estado: PENDIENTE DE VALIDACIÓN REAL**
 
-Crear el servidor MCP reutilizable y exponerlo localmente mediante `stdio`.
+## Resultado implementado
 
-## Archivos conceptuales
+Se implementó:
 
 ```text
 src/server/create-server.ts
 src/transports/stdio.ts
+tests/create-server.test.ts
+tests/stdio.test.ts
 ```
 
-## Regla
+Características:
 
-El registro de Tools debe ocurrir en el servidor/core, no dentro del transporte.
+- `McpServer({ name, version })`;
+- registro único de la Tool existente;
+- `StdioServerTransport`;
+- `server.connect(transport)`;
+- cierre de servidor y pool PostgreSQL;
+- manejo idempotente de SIGINT/SIGTERM;
+- stdout reservado al protocolo MCP;
+- errores de arranque enviados a stderr;
+- `tools/list` validado con MCP Inspector 2.5.0.
+
+Validaciones:
 
 ```text
-createProingServer()
-        │
-        └── registra Tools
-
-stdio.ts
-        │
-        └── conecta transporte
+npm run build    → exitoso
+npm test         → 68 aprobados / 0 fallidos
+npm run db:check → exitoso
+tools/list       → exitoso
 ```
 
-## Validaciones
+## Pendientes antes de cerrar
 
-- el cliente MCP puede descubrir la Tool;
-- la descripción de la Tool es entendible;
-- puede ejecutarse una consulta real;
-- errores se devuelven de forma controlada;
-- cerrar cliente no deja conexiones colgadas.
+1. Conceder al usuario MCP acceso de lectura a la View:
+
+```sql
+GRANT USAGE ON SCHEMA mcp TO <usuario_mcp>;
+GRANT SELECT ON mcp.vw_historico_vehiculos TO <usuario_mcp>;
+```
+
+2. En resultados con `isError: true`, no incluir `structuredContent`. Los clientes MCP pueden validar cualquier `structuredContent` presente contra `outputSchema`, incluso cuando el resultado representa un error.
+
+3. Repetir una invocación real de la Tool mediante un cliente MCP.
 
 ## Criterio de cierre
 
-Un cliente MCP local puede listar e invocar `operacion.consultar_historico_vehiculos`.
+Pendiente: una invocación real debe completar el flujo MCP → Tool → Repository → View → PostgreSQL sin errores de permisos ni validación de schema.
 
 ---
 
