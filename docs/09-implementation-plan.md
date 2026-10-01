@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0–8 cerrados / Bloque 9 listo para ejecutar  
+**Estado:** Bloques 0–9 cerrados / Bloque 10 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -594,49 +594,51 @@ Cumplido.
 
 # 13. Bloque 9 — Tests
 
-## Objetivo
+**Estado: CERRADO**
 
-Cubrir el comportamiento crítico del MVP.
+## Resultado
 
-## Tests mínimos
+Se realizó una auditoría de cobertura sobre:
 
-### Validación
+- configuración;
+- pool PostgreSQL;
+- catálogo;
+- Contract;
+- Service;
+- Cursor;
+- Repository;
+- Tool MCP;
+- servidor;
+- stdio/lifecycle;
+- Streamable HTTP;
+- integración MCP.
 
-- placas vacías;
-- fechas inválidas;
-- rango mayor a 31 días;
-- limit inválido.
+Huecos cerrados:
 
-### Catálogo
+- `limit=1`;
+- `limit=5000`;
+- rechazo de campos adicionales;
+- cursor con JSON corrupto;
+- cursor con versión no soportada;
+- cursor con campos adicionales;
+- cursor con placa vacía;
+- integración MCP exitosa con registro real simulado;
+- HTTP con dos requests demostrando servidor MCP por request y repository compartido;
+- metadata incluyendo `title` y `readOnlyHint`.
 
-- evento conocido;
-- evento equivalente;
-- evento desconocido;
-- evento nulo.
+Validaciones:
 
-### Repository
+```text
+npm run build    → exitoso
+npm test         → 82 aprobados / 0 fallidos
+npm run db:check → exitoso
+```
 
-- una placa;
-- varias placas;
-- sin resultados;
-- primera página;
-- página siguiente;
-- última página;
-- orden estable.
-
-### Tool
-
-- respuesta completa válida;
-- error controlado de DB;
-- resultado vacío.
-
-### Transportes
-
-Al menos una prueba/integración que demuestre que el servidor registra la Tool correctamente.
+No se detectaron bugs funcionales y no se modificó código de producción.
 
 ## Criterio de cierre
 
-Todos los tests automatizados pasan y no requieren credenciales productivas embebidas.
+Cumplido.
 
 ---
 
