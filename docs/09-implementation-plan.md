@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0, 1 y 2 cerrados / Bloque 3 listo para ejecutar  
+**Estado:** Bloques 0, 1, 2 y 3 cerrados / Bloque 4 listo para ejecutar  
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -237,23 +237,17 @@ Cumplido.
 
 # 7. Bloque 3 — Superficie PostgreSQL del histórico
 
-## Objetivo
+**Estado: CERRADO**
 
-Crear una superficie controlada para lectura del histórico.
+## Resultado
 
-## Fuente
-
-```text
-transportes.tr_vehiculos_tso_historico
-```
-
-## Vista propuesta
+Se implementó y ejecutó:
 
 ```text
 mcp.vw_historico_vehiculos
 ```
 
-Campos lógicos:
+Campos expuestos:
 
 ```text
 id_interno
@@ -266,41 +260,38 @@ velocidad
 evento_valor_origen
 ```
 
-## Reglas
+La View:
 
-- `id_interno` corresponde a `tso_id_`;
-- no se devuelve luego al agente;
-- `placa` corresponde a `tso_placa`;
-- `fecha_hora` corresponde a `tso_fecha_hora`;
-- `direccion` corresponde a `tso_direccion`;
-- `velocidad` corresponde a `tso_velocidad`;
-- `evento_valor_origen` corresponde a `tso_evento`;
-- latitud y longitud deben quedar preparadas para consumo numérico seguro.
+- no expone `tso_fecha_server`;
+- conserva `fecha_hora` sin conversión;
+- conserva el evento original;
+- convierte latitud/longitud de forma segura;
+- devuelve NULL para coordenadas inválidas o fuera de rango;
+- no incorpora catálogo de eventos;
+- no agrega índices ni permisos.
 
-La View no debe contener el catálogo de eventos del MVP. Esa normalización vive en el MCP.
-
-## SQL versionado
-
-El script de creación debe quedar en:
+Mediciones relevantes:
 
 ```text
-database/views/vw_historico_vehiculos.sql
+1 placa × 1 día: ~1.36 ms
+1 placa × 30 días: ~1.18 s en lectura fría
+1 placa × 30 días: ~12 ms con datos en caché
 ```
 
-## Validaciones
+El índice existente `(tso_placa, tso_fecha_hora)` fue utilizado correctamente. No se requieren índices nuevos para el MVP.
 
-Probar al menos:
+La clave lógica para la futura paginación queda simplificada a:
 
-- registro con coordenadas válidas;
-- coordenadas nulas;
-- evento nulo;
-- evento conocido;
-- múltiples placas;
-- rango de fechas.
+```text
+fecha_hora
+placa
+```
+
+aprovechando la unicidad de `(placa, fecha_hora)`.
 
 ## Criterio de cierre
 
-La View devuelve únicamente la superficie necesaria para el MCP y no requiere acceso directo de la Tool a las columnas `tso_*`.
+Cumplido.
 
 ---
 
@@ -419,7 +410,6 @@ fecha_hora <= fecha_fin
 ```text
 fecha_hora ASC
 placa ASC
-id_interno ASC
 ```
 
 ## Paginación
@@ -431,7 +421,6 @@ El cursor puede representar internamente:
 ```text
 fecha_hora
 placa
-id_interno
 ```
 
 El cliente/agente no debe construir ni modificar estos componentes directamente.
