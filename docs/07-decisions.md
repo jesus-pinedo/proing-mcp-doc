@@ -511,3 +511,27 @@ Durante el MVP local, Streamable HTTP escucha únicamente en:
 y aplica validación de Host y Origin mediante las utilidades oficiales del adaptador Node.
 
 No se implementan todavía autenticación, OAuth, TLS, CORS genérico ni exposición en `0.0.0.0`.
+
+
+---
+
+## DEC-029 — Tamaño de página por defecto orientado a consumibilidad
+
+**Estado:** Aprobada
+
+`operacion.consultar_historico_vehiculos` utiliza:
+
+```text
+DEFAULT_PAGE_SIZE = 100
+MAX_PAGE_SIZE = 5000
+```
+
+El cambio de 1000 a 100 registros por defecto se basa en una prueba E2E real
+con Claude Code por stdio. Una página de 1000 registros produjo aproximadamente
+271.886 caracteres y no pudo ser consumida directamente por el cliente. Con
+100 registros por página, el agente recuperó correctamente 1.402 registros en
+15 llamadas MCP, siguiendo `next_cursor` hasta `has_more=false`.
+
+El ajuste no cambia la paginación keyset, la estructura del cursor ni el máximo
+permitido. La metadata pública debe explicar cómo continuar páginas y cómo
+dividir períodos superiores a 31 días.

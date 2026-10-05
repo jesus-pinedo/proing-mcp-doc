@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0–9 cerrados / listo para iniciar Bloque 10 — validación con agente real**
+**Bloques 0–10 cerrados / listo para iniciar Bloque 11 — medición de rendimiento**
 
 ## Ya definido
 
@@ -44,12 +44,40 @@
 
 ## Pendientes inmediatos
 
-1. Ejecutar Bloque 10: validar el MCP desde un agente real.
-2. Confirmar selección autónoma de la Tool desde lenguaje natural.
-3. Confirmar construcción correcta de placas y rango de fechas.
-4. Validar seguimiento de `next_cursor` cuando exista otra página.
-5. Validar análisis de eventos y coordenadas por parte del agente.
-6. No realizar todavía optimizaciones de rendimiento ni cambios de arquitectura.
+1. Ejecutar Bloque 11: medición de rendimiento con los escenarios documentados.
+2. Medir antes de modificar índices o arquitectura.
+3. Mantener `DEFAULT_PAGE_SIZE=100` y `MAX_PAGE_SIZE=5000`.
+4. No crear índices hasta contar con evidencia de las mediciones.
+
+## Bloque 10 — Resultado
+
+**Estado: CERRADO**
+
+La validación E2E real con Claude Code por stdio confirmó:
+
+- descubrimiento del servidor y de la Tool;
+- invocación real contra PostgreSQL;
+- paginación por cursor y múltiples páginas;
+- `INVALID_DATE_RANGE`, `INVALID_CURSOR` e `INVALID_PLATES`;
+- consultas de múltiples placas;
+- normalización de timezone.
+
+Hallazgo de consumibilidad:
+
+- 1000 registros produjeron aproximadamente 271.886 caracteres y la respuesta
+  no pudo ser consumida directamente por Claude Code;
+- con `limit=100`, Claude Code recuperó 1.402 registros en 15 llamadas MCP,
+  siguiendo `next_cursor` hasta `has_more=false`.
+
+Ajuste de cierre:
+
+- `DEFAULT_PAGE_SIZE` cambió de 1000 a 100;
+- `MAX_PAGE_SIZE` permanece en 5000;
+- metadata y schemas públicos explican el rango máximo de 31 días, continuidad
+  por cursor y normalización a `America/Bogota` (`UTC-05:00`);
+- no cambiaron cursor, Repository, SQL, View, catálogo ni transportes;
+- la diferencia de formato entre errores de validación y errores funcionales
+  queda registrada sin cambios en este bloque.
 
 ## Bloque 9 — Resultado
 
@@ -358,4 +386,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Ejecutar el Bloque 7: servidor MCP y transporte local stdio.**
+**Ejecutar el Bloque 11: medición de rendimiento.**

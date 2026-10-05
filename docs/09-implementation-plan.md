@@ -2,7 +2,7 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0–9 cerrados / Bloque 10 listo para ejecutar  
+**Estado:** Bloques 0–10 cerrados / Bloque 11 listo para ejecutar
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -128,7 +128,7 @@ Cuando se cree el usuario definitivo `proing_mcp`, sus credenciales reemplazará
 ### 4.3 Límites iniciales
 
 ```text
-DEFAULT_PAGE_SIZE = 1000
+DEFAULT_PAGE_SIZE = 100
 MAX_PAGE_SIZE = 5000
 MAX_DATE_RANGE_DAYS = 31
 APP_TIMEZONE = America/Bogota
@@ -400,7 +400,7 @@ La Tool:
 - valida salida con Zod;
 - soporta una o varias placas;
 - aplica límite de 31 días;
-- usa page size 1000 por defecto y 5000 máximo;
+- usa page size 100 por defecto y 5000 máximo, ajustado en el Bloque 10 por evidencia E2E;
 - acepta cursor opcional;
 - normaliza fechas de entrada hacia `America/Bogota`;
 - conserva microsegundos y añade `-05:00` en salida;
@@ -644,6 +644,8 @@ Cumplido.
 
 # 14. Bloque 10 — Validación con cliente/agente
 
+**Estado: CERRADO**
+
 ## Objetivo
 
 Validar que el MCP pueda utilizarse desde un cliente real.
@@ -688,7 +690,28 @@ Uso de coordenadas para análisis posterior por parte del agente.
 
 ## Criterio de cierre
 
-Un agente MCP compatible puede utilizar la Tool para responder una consulta real de histórico.
+Cumplido con Claude Code por stdio.
+
+## Resultado
+
+Se validaron correctamente el descubrimiento del servidor y la Tool, consultas
+reales contra PostgreSQL, múltiples placas, timezone, paginación de varias
+páginas y los errores `INVALID_DATE_RANGE`, `INVALID_CURSOR` e
+`INVALID_PLATES`.
+
+Una página con el valor inicial de 1000 registros produjo aproximadamente
+271.886 caracteres y Claude Code no pudo consumirla directamente. Con
+`limit=100`, el cliente recuperó correctamente 1.402 registros mediante 15
+llamadas MCP, siguiendo `next_cursor` hasta `has_more=false`.
+
+Como ajuste de cierre, `DEFAULT_PAGE_SIZE` cambia a 100 y `MAX_PAGE_SIZE`
+permanece en 5000. La descripción de la Tool y de sus parámetros publica el
+rango máximo de 31 días, el procedimiento de continuación por cursor y la
+normalización de salida a `America/Bogota` (`UTC-05:00`). No se modifican
+cursor, Repository, SQL, View, catálogo ni transportes.
+
+La diferencia observada entre el formato de errores de validación y errores
+funcionales queda registrada, pero no se corrige en este bloque.
 
 ---
 

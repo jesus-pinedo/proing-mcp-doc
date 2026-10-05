@@ -52,7 +52,7 @@ Ejemplo conceptual:
   "placas": ["ABC123", "XYZ789"],
   "fecha_inicio": "2026-09-01T00:00:00-05:00",
   "fecha_fin": "2026-09-30T23:59:59-05:00",
-  "limit": 1000,
+  "limit": 100,
   "cursor": null
 }
 ```
@@ -62,14 +62,19 @@ Ejemplo conceptual:
 | Campo | Tipo | Requerido | Descripción |
 |---|---|---:|---|
 | `placas` | `string[]` | Sí | Una o varias placas a consultar. Mínimo una placa. |
-| `fecha_inicio` | datetime | Sí | Inicio del período solicitado. |
-| `fecha_fin` | datetime | Sí | Fin del período solicitado. Debe ser posterior a `fecha_inicio`. |
-| `limit` | integer | No | Cantidad máxima de registros solicitados en una página, limitada por el servidor. |
-| `cursor` | string | No | Cursor opaco utilizado para continuar una consulta paginada. |
+| `fecha_inicio` | datetime | Sí | Inicio del período con offset explícito. El rango hasta `fecha_fin` no puede superar 31 días. |
+| `fecha_fin` | datetime | Sí | Fin del período con offset explícito. Debe ser igual o posterior a `fecha_inicio`; el rango no puede superar 31 días. |
+| `limit` | integer | No | Registros por página. Valor por defecto: 100. Máximo: 5000. |
+| `cursor` | string | No | Cursor opaco. Si `has_more=true`, debe recibir el `next_cursor` de la página anterior conservando placas y fechas. |
 
 ### Reglas iniciales
 
 - rango máximo por consulta: **31 días**;
+- para períodos mayores, el agente debe dividir la consulta en rangos de máximo 31 días;
+- `limit` es opcional, con 100 registros por defecto y 5000 como máximo;
+- si `has_more=true`, el agente debe continuar con `next_cursor` como `cursor`, conservando exactamente las mismas placas y rango de fechas;
+- cuando necesite el conjunto completo, debe continuar hasta `has_more=false`;
+- `registros[].fecha_hora` se devuelve en `America/Bogota` (`UTC-05:00`), independientemente del offset de entrada;
 - la Tool debe soportar una o varias placas;
 - el máximo de placas por solicitud será configurable y se ajustará según pruebas de volumen;
 - las fechas relativas como “ayer” o “el mes pasado” deben ser resueltas por el agente antes de llamar la Tool;
@@ -166,7 +171,7 @@ Ejemplo conceptual:
     "fecha_fin": "2026-09-30T23:59:59-05:00"
   },
   "paginacion": {
-    "registros_retornados": 1000,
+    "registros_retornados": 100,
     "has_more": true,
     "next_cursor": "..."
   },
@@ -308,6 +313,21 @@ next_cursor
 ```
 
 No será obligatorio calcular un `COUNT(*)` total para cada consulta.
+
+El tamaño por defecto es de 100 registros por página y el máximo permitido
+permanece en 5000. Si una página devuelve `has_more=true`, el agente debe
+repetir la misma consulta usando `next_cursor` como `cursor`, sin cambiar las
+placas ni el rango de fechas. Para recuperar el conjunto completo debe continuar
+hasta recibir `has_more=false`.
+
+### Evidencia E2E de consumibilidad
+
+La configuración inicial de 1000 registros produjo una respuesta de
+aproximadamente 271.886 caracteres que Claude Code no pudo consumir
+directamente. Con 100 registros por página, Claude Code recuperó correctamente
+1.402 registros en 15 llamadas MCP siguiendo el cursor hasta
+`has_more=false`. Por esta evidencia, 100 es el valor por defecto del contrato;
+el máximo configurable continúa siendo 5000.
 
 ### Orden determinístico
 
