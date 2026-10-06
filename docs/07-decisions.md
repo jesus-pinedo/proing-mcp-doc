@@ -310,22 +310,46 @@ UNIQUE (tso_placa, tso_fecha_hora)
 
 fue utilizado correctamente por PostgreSQL en las pruebas.
 
-Resultados observados:
+Las comprobaciones preliminares confirmaron que PostgreSQL podía utilizar el
+índice. La evidencia definitiva para decidir sobre índices es la medición
+controlada del Bloque 11 que se registra a continuación.
+
+### Validación final de rendimiento — Bloque 11
+
+Las consultas reales del Repository se midieron con
+`EXPLAIN (ANALYZE, BUFFERS)`, `DEFAULT_PAGE_SIZE=100` y `LIMIT 101`:
+
+| Escenario | Trabajo observado | Execution Time | Shared read |
+|---|---|---:|---:|
+| 1 placa × 1 día | 66 filas, Index Scan | 0,95–1,91 ms | 0 |
+| 1 placa × 30 días | 1.402 candidatos, Bitmap Index/Heap Scan | 6,19–13,32 ms | 0 |
+| 5 placas × 30 días | 33.398 entradas examinadas, 33.296 descartadas | 31,39–41,43 ms | 0 |
+| 10 placas × 30 días | 6.312 entradas examinadas, 6.210 descartadas | 5,70–10,62 ms | 0 |
+
+El escenario de cinco placas mostró trabajo adicional por el filtro de placas,
+pero no un cuello de botella crítico. El escenario de diez placas fue más
+rápido porque encontró coincidencias con mayor densidad en el índice temporal;
+por tanto, el costo de la primera página depende también de la distribución de
+los datos y no crece linealmente con la cantidad de placas.
+
+Las páginas posteriores de `TUZ64G` para septiembre confirmaron la efectividad
+del cursor keyset:
 
 ```text
-1 placa × 1 día:
-Execution Time ≈ 1.36 ms
-
-1 placa × 30 días:
-primera lectura con bloques desde disco ≈ 1.18 s
-segunda lectura con bloques en caché ≈ 12 ms
+primera página:       ~6,56–6,73 ms / 1.361 buffers hit
+página intermedia:    ~3,36–3,37 ms / 686 buffers hit
+página final:         ~0,13–0,15 ms / 6 buffers hit
 ```
 
-El costo principal observado en la primera lectura de 30 días provino de I/O de disco, no de la búsqueda por índice.
+El cursor excluye las filas ya entregadas mediante el `Index Cond`, sin la
+degradación acumulativa de `OFFSET`. No se observaron lecturas físicas en estas
+mediciones.
 
 ### Regla
 
-No se agregará un índice nuevo hasta que el uso real o futuras mediciones demuestren una necesidad concreta.
+Los índices actuales y el cursor keyset son suficientes para el MVP. No se
+agregará un índice nuevo hasta que el uso real o futuras mediciones demuestren
+una necesidad concreta y repetible.
 
 
 ---
@@ -528,10 +552,15 @@ MAX_PAGE_SIZE = 5000
 
 El cambio de 1000 a 100 registros por defecto se basa en una prueba E2E real
 con Claude Code por stdio. Una página de 1000 registros produjo aproximadamente
-271.886 caracteres y no pudo ser consumida directamente por el cliente. Con
-100 registros por página, el agente recuperó correctamente 1.402 registros en
-15 llamadas MCP, siguiendo `next_cursor` hasta `has_more=false`.
+271.886 caracteres y no pudo ser consumida directamente por el cliente. Una
+página de 250 registros produjo aproximadamente 67.741 caracteres y también
+fue desviada a un archivo auxiliar. Con 100 registros por página, el agente
+consumió directamente todas las páginas y recuperó correctamente 1.402
+registros en 15 llamadas MCP, siguiendo `next_cursor` hasta `has_more=false`.
 
 El ajuste no cambia la paginación keyset, la estructura del cursor ni el máximo
 permitido. La metadata pública debe explicar cómo continuar páginas y cómo
-dividir períodos superiores a 31 días.
+dividir períodos superiores a 31 días. Para consultas grandes, debe desalentar
+el aumento de `limit` como mecanismo para recuperar todo el conjunto en una
+sola respuesta y orientar al agente a usar el valor por defecto con
+`next_cursor` mientras `has_more=true`.

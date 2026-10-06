@@ -24,7 +24,7 @@ Ejemplos:
 
 ## operacion.consultar_historico_vehiculos
 
-**Estado:** contrato funcional V1 en definición final.
+**Estado:** contrato funcional V1 implementado y validado.
 
 ### Objetivo
 
@@ -40,6 +40,27 @@ La Tool debe permitir casos como:
 - contrastar el histórico con otras fuentes de datos cuando el volumen sea razonable.
 
 La Tool recupera datos históricos. El análisis posterior corresponde al agente.
+
+Arquitectura implementada:
+
+```text
+Tool
+ ↓
+Contract
+ ↓
+Service
+ ↓
+Repository
+ ↓
+PostgreSQL
+ ↓
+mcp.vw_historico_vehiculos
+ ↓
+transportes.tr_vehiculos_tso_historico
+```
+
+El mismo `createProingServer()` alimenta los transportes `stdio` y Streamable
+HTTP; la lógica funcional es independiente del transporte.
 
 ---
 
@@ -76,7 +97,7 @@ Ejemplo conceptual:
 - cuando necesite el conjunto completo, debe continuar hasta `has_more=false`;
 - `registros[].fecha_hora` se devuelve en `America/Bogota` (`UTC-05:00`), independientemente del offset de entrada;
 - la Tool debe soportar una o varias placas;
-- el máximo de placas por solicitud será configurable y se ajustará según pruebas de volumen;
+- el contrato exige al menos una placa; el MVP se validó con consultas de hasta 10 placas;
 - las fechas relativas como “ayer” o “el mes pasado” deben ser resueltas por el agente antes de llamar la Tool;
 - las placas deben normalizarse al formato esperado por Proing;
 - no se acepta SQL enviado por el agente.
@@ -112,13 +133,13 @@ PRIMARY KEY (tso_id_)
 UNIQUE (tso_placa, tso_fecha_hora)
 ```
 
-Se propone exponer esta información mediante una superficie controlada, preferiblemente:
+La información se expone mediante la superficie controlada:
 
 ```text
 mcp.vw_historico_vehiculos
 ```
 
-La View podrá encargarse de normalizar nombres y tipos sin exponer el esquema físico al agente.
+La View normaliza nombres y coordenadas sin exponer el esquema físico al agente.
 
 La normalización del evento se realizará en la capa de dominio del MCP mediante un catálogo JSON versionado en el repositorio.
 
@@ -128,7 +149,7 @@ La normalización del evento se realizará en la capa de dominio del MCP mediant
 
 | PostgreSQL | Contrato MCP | Exposición |
 |---|---|---|
-| `tso_id_` | uso interno para cursor | No |
+| `tso_id_` | no utilizado por el cursor V1 | No |
 | `tso_placa` | `placa` | Sí |
 | `tso_fecha_hora` | `fecha_hora` | Sí |
 | `tso_latitud` | `latitud` | Sí |
@@ -208,6 +229,18 @@ Ejemplo conceptual:
 | `evento.nombre` | string | Nombre del evento en español. |
 | `evento.valor_origen` | string/null | Valor original recibido del proveedor. |
 | `evento.descripcion` | string | Descripción funcional. En V1 inicia vacía. |
+
+### Fechas y zona horaria
+
+`tso_fecha_hora` es `timestamp without time zone` y se interpreta como hora
+local de Colombia (`America/Bogota`, `UTC-05:00`). Las fechas de entrada deben
+incluir offset explícito; si utilizan otro offset, el Service las normaliza a
+hora Colombia antes de consultar PostgreSQL.
+
+Cada `registros[].fecha_hora` se serializa con `-05:00` y conserva seis dígitos
+de microsegundos. Los campos `consulta.fecha_inicio` y `consulta.fecha_fin`
+reflejan el valor de entrada recibido y, por tanto, pueden conservar un offset
+distinto.
 
 ---
 
@@ -302,7 +335,16 @@ Posteriormente podrá documentarse el significado funcional Proing de cada event
 
 La tabla histórica puede contener grandes volúmenes de información y la consulta debe soportar períodos de hasta un mes para varias placas.
 
-Por lo tanto, la V1 deberá implementar paginación por cursor.
+La V1 implementa keyset pagination mediante un cursor opaco base64url y
+versionado. Su estructura lógica es:
+
+```json
+{
+  "v": 1,
+  "fecha_hora": "2026-09-01T06:32:14.123456",
+  "placa": "ABC123"
+}
+```
 
 La respuesta incluirá:
 
@@ -312,7 +354,8 @@ has_more
 next_cursor
 ```
 
-No será obligatorio calcular un `COUNT(*)` total para cada consulta.
+El Repository usa `LIMIT N + 1` para determinar `has_more`, sin `COUNT(*)` y
+sin `OFFSET`.
 
 El tamaño por defecto es de 100 registros por página y el máximo permitido
 permanece en 5000. Si una página devuelve `has_more=true`, el agente debe
@@ -320,14 +363,50 @@ repetir la misma consulta usando `next_cursor` como `cursor`, sin cambiar las
 placas ni el rango de fechas. Para recuperar el conjunto completo debe continuar
 hasta recibir `has_more=false`.
 
+Para consultas grandes, el agente no debe aumentar `limit` con el objetivo de
+recuperar todo el conjunto en una sola respuesta. Debe preferir el valor por
+defecto y continuar mediante `next_cursor` mientras `has_more=true`.
+
 ### Evidencia E2E de consumibilidad
 
 La configuración inicial de 1000 registros produjo una respuesta de
 aproximadamente 271.886 caracteres que Claude Code no pudo consumir
-directamente. Con 100 registros por página, Claude Code recuperó correctamente
-1.402 registros en 15 llamadas MCP siguiendo el cursor hasta
-`has_more=false`. Por esta evidencia, 100 es el valor por defecto del contrato;
-el máximo configurable continúa siendo 5000.
+directamente. Una página con 250 registros produjo aproximadamente 67.741
+caracteres y también fue desviada a un archivo auxiliar. Con 100 registros por
+página, Claude Code consumió directamente todas las páginas y recuperó
+correctamente 1.402 registros en 15 llamadas MCP siguiendo el cursor hasta
+`has_more=false`.
+
+Por interoperabilidad y para mantener margen frente a registros potencialmente
+mayores, 100 es el valor por defecto del contrato. El máximo técnico continúa
+siendo 5000, pero la metadata pública desalienta aumentarlo para recuperar
+datasets grandes en una sola respuesta.
+
+### Validación E2E con cliente real
+
+Cliente: `Claude Code`. Transporte: `stdio`.
+
+Se validaron conexión MCP, `tools/list`, descubrimiento y metadata `readOnly`,
+invocación real contra PostgreSQL, resultado vacío, múltiples placas,
+paginación, cursores, errores controlados, normalización de timezone e
+interpretación del resultado por el modelo.
+
+Caso de referencia `TUZ64G`, septiembre de 2026:
+
+```text
+1.402 registros
+15 páginas con DEFAULT_PAGE_SIZE=100
+14 páginas de 100 registros
+última página de 2 registros
+has_more=false
+next_cursor=null
+```
+
+El usuario pudo solicitar naturalmente el histórico completo sin conocer
+paginación, cursores ni límites internos. Claude Code siguió `next_cursor`
+automáticamente usando la metadata pública. Durante pruebas previas el agente
+intentó utilizar `limit=5000`; por ello la metadata se ajustó para indicar que
+las consultas grandes deben conservar el default y continuar por cursor.
 
 ### Orden determinístico
 
@@ -340,7 +419,7 @@ fecha_hora ASC
 placa ASC
 ```
 
-El cursor podrá utilizar internamente:
+El cursor utiliza internamente:
 
 ```text
 fecha_hora
@@ -371,7 +450,7 @@ Para el MVP se mantendrá una única Tool histórica y se evaluarán nuevos caso
 
 ---
 
-## Casos de error
+## Casos de error validados
 
 ### INVALID_DATE_RANGE
 
@@ -421,6 +500,17 @@ La respuesta deberá devolver:
   "registros": []
 }
 ```
+
+### Presentación de errores en el cliente
+
+Los errores de validación de input, como `INVALID_PLATES` e
+`INVALID_DATE_RANGE`, son presentados por el SDK como texto de validación. Los
+errores funcionales, como `INVALID_CURSOR` y `DATA_SOURCE_ERROR`, se entregan
+con `isError=true`, `content` textual con JSON estructurado y sin
+`structuredContent`.
+
+Esta diferencia de presentación fue validada y se conserva como hallazgo no
+bloqueante del MVP.
 
 ---
 

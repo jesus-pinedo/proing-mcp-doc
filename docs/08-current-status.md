@@ -2,7 +2,7 @@
 
 ## Fase
 
-**Bloques 0–10 cerrados / listo para iniciar Bloque 11 — medición de rendimiento**
+**MVP técnico cerrado / Bloques 0–12 cumplidos**
 
 ## Ya definido
 
@@ -15,7 +15,7 @@
 - Primera ejecución local.
 - Núcleo independiente del transporte.
 - `stdio` como transporte principal local.
-- Streamable HTTP previsto para HTTP/local-remoto.
+- Streamable HTTP stateless implementado para uso local y evolución remota.
 - Conexión directa del MCP a PostgreSQL para lectura/reporting.
 - Pool PostgreSQL compartido.
 - Sin base de datos propia para el MCP.
@@ -29,8 +29,8 @@
 - Sin SQL generado por el agente.
 - Primer dominio: Operación.
 - Primera Tool: `operacion.consultar_historico_vehiculos`.
-- La Tool soportará una o varias placas y hasta 31 días por consulta.
-- El histórico devolverá coordenadas, dirección, velocidad y evento normalizado.
+- La Tool soporta una o varias placas y hasta 31 días por consulta.
+- El histórico devuelve coordenadas, dirección, velocidad y evento normalizado.
 - El catálogo de eventos del MVP vivirá en `src/domains/operacion/catalogs/eventos-vehiculo.json`.
 - La normalización del evento se realizará en la capa de dominio del MCP, conservando el valor original del proveedor.
 - Resources y Prompts contemplados para evolución, pero fuera del alcance de la V1.
@@ -41,13 +41,67 @@
 - La conectividad PostgreSQL de desarrollo fue validada.
 - El usuario de desarrollo actual tiene permiso `SELECT` sobre la tabla histórica.
 - Las credenciales definitivas del futuro usuario `proing_mcp` se configurarán mediante `.env` local no versionado.
+- Límites finales: `DEFAULT_PAGE_SIZE=100`, `MAX_PAGE_SIZE=5000`,
+  `MAX_DATE_RANGE_DAYS=31`, `APP_TIMEZONE=America/Bogota`.
+- Arquitectura implementada: Tool → Contract → Service → Repository →
+  PostgreSQL → `mcp.vw_historico_vehiculos` → tabla histórica.
 
-## Pendientes inmediatos
+## Pendientes posteriores al MVP
 
-1. Ejecutar Bloque 11: medición de rendimiento con los escenarios documentados.
-2. Medir antes de modificar índices o arquitectura.
-3. Mantener `DEFAULT_PAGE_SIZE=100` y `MAX_PAGE_SIZE=5000`.
-4. No crear índices hasta contar con evidencia de las mediciones.
+1. Preparar autenticación, autorización, TLS y exposición de red antes de una publicación remota.
+2. Sustituir las credenciales temporales por el usuario definitivo `proing_mcp` read-only.
+3. Definir despliegue y operación productiva cuando exista aprobación de infraestructura.
+4. Medir nuevamente antes de modificar índices, cursor o arquitectura.
+5. Evaluar nuevas Tools únicamente a partir de necesidades de negocio aprobadas.
+
+## Bloque 12 — Resultado
+
+**Estado: CERRADO**
+
+La documentación fue reconciliada con la implementación real y consolida:
+
+- arquitectura y transportes implementados;
+- contrato, límites, paginación y fechas finales;
+- errores y hallazgos de interoperabilidad;
+- validación E2E con Claude Code por `stdio`;
+- resultados de rendimiento del Bloque 11;
+- suficiencia de índices y cursor para el MVP;
+- pendientes explícitamente posteriores al MVP.
+
+## Bloque 11 — Resultado
+
+**Estado: CERRADO**
+
+Se ejecutó `EXPLAIN (ANALYZE, BUFFERS)` dos veces por escenario, sin crear
+índices, cambiar configuración ni ejecutar mantenimiento.
+
+### Primera página
+
+| Escenario | Filas/trabajo principal | Plan | Execution Time | Shared read |
+|---|---|---|---:|---:|
+| `TUZ64G` × 1 día | 66 filas | Index Scan + quicksort 41 kB | 0,95–1,91 ms | 0 |
+| `TUZ64G` × 30 días | 1.402 candidatos, 101 retornados | Bitmap Index/Heap Scan + top-N 46 kB | 6,19–13,32 ms | 0 |
+| 5 placas × 30 días | 33.398 examinadas, 33.296 descartadas | Index Scan por fecha + Incremental Sort | 31,39–41,43 ms | 0 |
+| 10 placas × 30 días | 6.312 examinadas, 6.210 descartadas | Index Scan por fecha + Incremental Sort | 5,70–10,62 ms | 0 |
+
+Las cinco placas sumaron 6.932 registros; las diez placas, 13.670. La prueba de
+diez placas fue más rápida que la de cinco por una mayor densidad cronológica de
+coincidencias, confirmando que el costo no crece linealmente con la cantidad de
+placas.
+
+### Páginas posteriores por cursor
+
+Para `TUZ64G`, septiembre de 2026:
+
+| Página | Filas procesadas | Execution Time | Buffers hit |
+|---|---:|---:|---:|
+| Primera | 1.402 | 6,56–6,73 ms | 1.361 |
+| Intermedia, tras 700 registros | 702 | 3,36–3,37 ms | 686 |
+| Final, tras 1.400 registros | 2 | 0,13–0,15 ms | 6 |
+
+La condición keyset se incorpora al `Index Cond`, evita volver a recorrer filas
+anteriores y no presenta degradación tipo `OFFSET`. Los índices actuales y el
+cursor son suficientes para el MVP; no se justifica agregar un índice.
 
 ## Bloque 10 — Resultado
 
@@ -55,19 +109,29 @@
 
 La validación E2E real con Claude Code por stdio confirmó:
 
-- descubrimiento del servidor y de la Tool;
+- conexión MCP, `tools/list`, descubrimiento del servidor y de la Tool;
+- metadata y anotación `readOnly`;
 - invocación real contra PostgreSQL;
+- resultado vacío;
 - paginación por cursor y múltiples páginas;
 - `INVALID_DATE_RANGE`, `INVALID_CURSOR` e `INVALID_PLATES`;
 - consultas de múltiples placas;
-- normalización de timezone.
+- normalización de timezone;
+- interpretación del resultado por el modelo.
 
 Hallazgo de consumibilidad:
 
 - 1000 registros produjeron aproximadamente 271.886 caracteres y la respuesta
   no pudo ser consumida directamente por Claude Code;
+- 250 registros produjeron aproximadamente 67.741 caracteres y la respuesta
+  también fue desviada a un archivo auxiliar;
 - con `limit=100`, Claude Code recuperó 1.402 registros en 15 llamadas MCP,
   siguiendo `next_cursor` hasta `has_more=false`.
+
+El caso de referencia produjo 14 páginas de 100 registros y una última página
+de 2, con `has_more=false` y `next_cursor=null`. El usuario solicitó el
+histórico completo sin conocer paginación ni cursores; Claude Code siguió la
+metadata automáticamente.
 
 Ajuste de cierre:
 
@@ -312,12 +376,10 @@ Validaciones realizadas:
 - evento conservado en su valor original;
 - View creada correctamente en PostgreSQL;
 - consulta real de 20 registros validada;
-- índice existente `(tso_placa, tso_fecha_hora)` utilizado por PostgreSQL;
-- 1 placa × 1 día: ~1.36 ms;
-- 1 placa × 30 días: ~1.18 s en primera lectura con I/O y ~12 ms en caché;
-- no se requieren índices adicionales para el MVP.
+- índice existente `(tso_placa, tso_fecha_hora)` disponible para las consultas.
 
-La paginación futura utilizará cursor lógico basado en:
+La medición final de índices y latencias está consolidada en el resultado del
+Bloque 11. La paginación implementada utiliza un cursor lógico basado en:
 
 ```text
 fecha_hora
@@ -386,4 +448,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Ejecutar el Bloque 11: medición de rendimiento.**
+**MVP técnico cerrado. Cualquier siguiente fase requiere un nuevo alcance aprobado.**

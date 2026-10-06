@@ -2,7 +2,8 @@
 
 **Proyecto:** Proing MCP  
 **Versión:** V1 / MVP técnico  
-**Estado:** Bloques 0–10 cerrados / Bloque 11 listo para ejecutar
+**Estado:** MVP técnico cerrado / Bloques 0–12 cumplidos
+
 **Primera Tool:** `operacion.consultar_historico_vehiculos`
 
 ---
@@ -270,17 +271,10 @@ La View:
 - no incorpora catálogo de eventos;
 - no agrega índices ni permisos.
 
-Mediciones relevantes:
+La medición definitiva de índices y latencias se realizó en el Bloque 11. Sus
+resultados confirman que no se requieren índices nuevos para el MVP.
 
-```text
-1 placa × 1 día: ~1.36 ms
-1 placa × 30 días: ~1.18 s en lectura fría
-1 placa × 30 días: ~12 ms con datos en caché
-```
-
-El índice existente `(tso_placa, tso_fecha_hora)` fue utilizado correctamente. No se requieren índices nuevos para el MVP.
-
-La clave lógica para la futura paginación queda simplificada a:
+La clave lógica de la paginación implementada quedó simplificada a:
 
 ```text
 fecha_hora
@@ -701,14 +695,23 @@ páginas y los errores `INVALID_DATE_RANGE`, `INVALID_CURSOR` e
 
 Una página con el valor inicial de 1000 registros produjo aproximadamente
 271.886 caracteres y Claude Code no pudo consumirla directamente. Con
-`limit=100`, el cliente recuperó correctamente 1.402 registros mediante 15
-llamadas MCP, siguiendo `next_cursor` hasta `has_more=false`.
+`limit=250`, una página produjo aproximadamente 67.741 caracteres y también
+fue desviada a un archivo auxiliar. Con `limit=100`, el cliente recuperó
+correctamente 1.402 registros mediante 15 llamadas MCP, siguiendo
+`next_cursor` hasta `has_more=false`: 14 páginas de 100 registros y una última
+de 2, con `next_cursor=null`.
+
+El usuario solicitó naturalmente el conjunto completo sin conocer la
+paginación ni el cursor. Claude Code conservó placas y rango de fechas y siguió
+automáticamente la metadata pública hasta finalizar.
 
 Como ajuste de cierre, `DEFAULT_PAGE_SIZE` cambia a 100 y `MAX_PAGE_SIZE`
 permanece en 5000. La descripción de la Tool y de sus parámetros publica el
 rango máximo de 31 días, el procedimiento de continuación por cursor y la
-normalización de salida a `America/Bogota` (`UTC-05:00`). No se modifican
-cursor, Repository, SQL, View, catálogo ni transportes.
+normalización de salida a `America/Bogota` (`UTC-05:00`). También desalienta
+aumentar `limit` para recuperar datasets grandes en una sola respuesta y
+recomienda conservar el valor por defecto y seguir `next_cursor`. No se
+modifican cursor, Repository, SQL, View, catálogo ni transportes.
 
 La diferencia observada entre el formato de errores de validación y errores
 funcionales queda registrada, pero no se corrige en este bloque.
@@ -716,6 +719,8 @@ funcionales queda registrada, pero no se corrige en este bloque.
 ---
 
 # 15. Bloque 11 — Medición de rendimiento
+
+**Estado: CERRADO**
 
 ## Objetivo
 
@@ -748,11 +753,46 @@ No crear índices adicionales hasta medir.
 
 ## Criterio de cierre
 
-Se documenta si el índice actual es suficiente para el MVP o si se requiere optimización.
+Cumplido. Los índices actuales y el cursor keyset son suficientes para el MVP;
+no se justifica agregar un índice.
+
+## Resultado
+
+Se ejecutó `EXPLAIN (ANALYZE, BUFFERS)` dos veces por escenario sobre la
+consulta real de primera página del Repository, con
+`DEFAULT_PAGE_SIZE=100` y `LIMIT 101`. No se crearon índices, no se cambió la
+configuración y no se ejecutaron operaciones de mantenimiento.
+
+| Escenario | Filas/trabajo principal | Plan | Execution Time | Shared read |
+|---|---|---|---:|---:|
+| `TUZ64G` × 1 día | 66 filas | Index Scan + quicksort 41 kB | 0,95–1,91 ms | 0 |
+| `TUZ64G` × 30 días | 1.402 candidatos, 101 retornados | Bitmap Index/Heap Scan + top-N 46 kB | 6,19–13,32 ms | 0 |
+| 5 placas × 30 días | 33.398 examinadas, 33.296 descartadas | Index Scan por fecha + Incremental Sort | 31,39–41,43 ms | 0 |
+| 10 placas × 30 días | 6.312 examinadas, 6.210 descartadas | Index Scan por fecha + Incremental Sort | 5,70–10,62 ms | 0 |
+
+Las cinco placas sumaron 6.932 registros; las diez, 13.670. El escenario de
+cinco placas mostró trabajo adicional por el filtro, pero no un cuello de
+botella crítico. El resultado de diez placas fue más rápido por la distribución
+temporal de las coincidencias: el costo no crece linealmente con la cantidad de
+placas.
+
+También se midieron páginas posteriores de `TUZ64G` para septiembre de 2026:
+
+| Página | Filas procesadas | Execution Time | Buffers hit |
+|---|---:|---:|---:|
+| Primera | 1.402 | 6,56–6,73 ms | 1.361 |
+| Intermedia, tras 700 registros | 702 | 3,36–3,37 ms | 686 |
+| Final, tras 1.400 registros | 2 | 0,13–0,15 ms | 6 |
+
+La condición keyset se incorporó al `Index Cond`, excluyó las filas ya
+entregadas y evitó degradación tipo `OFFSET`. No hubo lecturas físicas en estas
+mediciones.
 
 ---
 
 # 16. Bloque 12 — Cierre documental
+
+**Estado: CERRADO**
 
 ## Objetivo
 
@@ -777,7 +817,19 @@ Registrar:
 
 ## Criterio de cierre
 
-La documentación representa exactamente lo que existe en código.
+Cumplido. La documentación representa la implementación y las validaciones
+reales del MVP.
+
+## Resultado
+
+Se consolidaron:
+
+- la arquitectura Tool → Contract → Service → Repository → PostgreSQL;
+- los transportes `stdio` y Streamable HTTP independientes del servidor;
+- los límites, timezone, View, catálogo, errores y cursor definitivos;
+- la validación E2E con Claude Code por `stdio`;
+- los resultados de rendimiento y la suficiencia de los índices actuales;
+- los pendientes posteriores al MVP.
 
 ---
 
@@ -816,6 +868,8 @@ No implementar bloques posteriores anticipadamente salvo que una dependencia té
 ---
 
 # 18. Resultado esperado del MVP
+
+**Estado: CUMPLIDO**
 
 Al finalizar:
 
