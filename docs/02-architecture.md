@@ -363,15 +363,55 @@ Cliente MCP local
 
 ### Streamable HTTP
 
-El mismo servidor podrá exponerse por:
+El mismo servidor se expone por HTTP mediante el endpoint MCP y en producción mediante HTTPS:
 
 ```text
-http://localhost:<puerto>/mcp
+https://mcp.proing.com.co/mcp
 ```
 
-y posteriormente en AWS mediante HTTPS.
-
 La lógica de las Tools debe ser la misma independientemente del transporte.
+
+### Autenticación HTTP productiva
+
+El transporte Streamable HTTP productivo incorpora un gate de autenticación antes de entregar la request al handler MCP:
+
+```text
+request /mcp
+   ↓
+validación de Host
+   ↓
+validación de Origin
+   ↓
+TokenAuthenticator
+   ↓
+AuthContext
+   ↓
+toNodeHandler
+   ↓
+createMcpHandler
+   ↓
+McpServer
+```
+
+Cada usuario autorizado utiliza un Bearer token estático individual:
+
+```http
+Authorization: Bearer <token_usuario>
+```
+
+El token se genera con 256 bits aleatorios. El servidor no persiste el token original: conserva únicamente su SHA-256 en un archivo de seguridad externo al repositorio. La autenticación se realiza antes de crear el `McpServer`, por lo que una request no autenticada no alcanza `initialize`, `tools/list`, `tools/call`, Service, Repository ni PostgreSQL.
+
+La identidad autenticada se representa mediante un contexto mínimo por request:
+
+```text
+AuthContext
+├── userId
+└── authType = static_token
+```
+
+La autenticación por token es deliberadamente una solución MVP. OAuth, RBAC, autorización por Tool y data scopes quedan para una fase posterior.
+
+El transporte `stdio` continúa sin autenticación y no depende de esta configuración.
 
 ---
 
@@ -480,6 +520,11 @@ proing-mcp/
 │   │   └── database/
 │   │       └── postgres.ts
 │   │
+│   ├── security/
+│   │   ├── auth-context.ts
+│   │   ├── token-authenticator.ts
+│   │   └── token-repository.ts
+│   │
 │   ├── config/
 │   │   └── env.ts
 │   │
@@ -554,9 +599,10 @@ DATABASE_POOL_MAX
 
 APP_TIMEZONE=America/Bogota
 HTTP_PORT
+MCP_AUTH_TOKENS_FILE
 ```
 
-`.env` se utilizará durante desarrollo local para credenciales y configuración sensible y no se versionará. El repositorio incluirá únicamente `.env.example` sin secretos.
+`.env` se utilizará durante desarrollo local para credenciales y configuración sensible y no se versionará. El repositorio incluirá únicamente `.env.example` sin secretos. `MCP_AUTH_TOKENS_FILE` es opcional para la configuración general y obligatorio al iniciar Streamable HTTP; `stdio` no lo requiere.
 
 ---
 
