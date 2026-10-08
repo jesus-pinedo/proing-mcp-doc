@@ -99,6 +99,121 @@ La base de datos no deberá exponerse públicamente para permitir el acceso del 
 
 ---
 
+## Autenticación remota MVP
+
+El endpoint productivo:
+
+```text
+https://mcp.proing.com.co/mcp
+```
+
+requiere autenticación por Bearer token individual por usuario.
+
+Flujo:
+
+```text
+Cliente MCP
+   ↓
+HTTPS / Nginx
+   ↓
+Authorization: Bearer <token>
+   ↓
+validación Host / Origin
+   ↓
+TokenAuthenticator
+   ↓
+AuthContext
+   ↓
+handler MCP
+```
+
+Reglas:
+
+- cada usuario recibe un token diferente;
+- cada token se genera con 32 bytes aleatorios mediante CSPRNG;
+- el servidor persiste únicamente `SHA-256(token)`;
+- el token original se entrega una sola vez al usuario y se configura en el cliente MCP;
+- una request sin token, con token inválido o perteneciente a un usuario deshabilitado recibe `401 Unauthorized`;
+- todos los fallos de autenticación devuelven la misma respuesta observable;
+- la autenticación ocurre antes de `toNodeHandler` y del handler MCP;
+- `stdio` local permanece sin autenticación.
+
+La respuesta HTTP uniforme es:
+
+```text
+401 Unauthorized
+WWW-Authenticate: Bearer realm="proing-mcp"
+Cache-Control: no-store
+```
+
+con body:
+
+```json
+{"error":"unauthorized"}
+```
+
+### Repositorio de tokens
+
+La configuración productiva utiliza:
+
+```text
+MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json
+```
+
+Formato:
+
+```json
+{
+  "version": 1,
+  "users": [
+    {
+      "id": "usuario",
+      "tokenHash": "<sha256 hexadecimal>",
+      "enabled": true
+    }
+  ]
+}
+```
+
+El archivo:
+
+- vive fuera del repositorio;
+- debe ser legible por el usuario del servicio y no por usuarios generales;
+- se valida estrictamente al iniciar HTTP;
+- se carga una sola vez antes de `listen()`;
+- no se relee por request;
+- requiere reinicio ordenado del servicio después de una rotación o revocación.
+
+En producción se utiliza el usuario/grupo de servicio `proing-mcp` y permisos restrictivos sobre `/etc/proing-mcp`.
+
+### Validación criptográfica
+
+SHA-256 directo se utiliza únicamente porque los tokens tienen 256 bits de entropía y no son passwords elegidos por humanos.
+
+El autenticador:
+
+- limita la longitud del token antes de procesarlo;
+- calcula SHA-256 sobre los bytes exactos;
+- compara hashes mediante `timingSafeEqual`;
+- rechaza IDs o hashes duplicados en configuración;
+- no recorta ni normaliza silenciosamente el token.
+
+### Limitaciones deliberadas del MVP
+
+Esta fase no implementa todavía:
+
+- OAuth;
+- JWT propio;
+- expiración automática de tokens;
+- RBAC;
+- permisos por Tool;
+- data scopes;
+- hot reload de credenciales.
+
+Mientras este modelo esté vigente, todos los usuarios autenticados tienen acceso a las mismas Tools publicadas. No deben incorporarse Tools sensibles que requieran distintos niveles de autorización sin implementar antes la capa de autorización correspondiente.
+
+---
+
 ## Límites de consulta
 
 Cada Tool deberá establecer los límites que correspondan:
@@ -172,24 +287,23 @@ Desde la V1 se registrará como mínimo:
 - éxito/error;
 - cantidad de registros.
 
-No se registrarán secretos.
+No se registrarán secretos, el header `Authorization`, tokens ni hashes de tokens.
 
-Cuando exista autenticación de usuarios se incorporará identificación del actor y trazabilidad por usuario.
+La autenticación actual ya permite identificar al actor mediante `userId` y `authType=static_token`. La auditoría estructurada por Tool y usuario se incorporará en la siguiente fase sin propagar secretos.
 
 ---
 
 ## Seguridad futura
 
-Antes de publicar el MCP remotamente se deberá definir:
+El endpoint remoto ya dispone de HTTPS y autenticación Bearer individual para el MVP. La evolución de seguridad deberá cubrir:
 
-- autenticación;
-- autorización;
-- TLS;
-- exposición de red;
-- auditoría;
+- OAuth o identidad corporativa definitiva;
+- autorización por usuario, rol, dominio y Tool;
+- data scopes;
+- auditoría estructurada por actor;
 - rate limits;
-- trazabilidad por usuario;
-- alcance por dominio o Tool.
+- rotación y administración operativa de credenciales;
+- revisión periódica de exposición de red y reverse proxy.
 
 ---
 
