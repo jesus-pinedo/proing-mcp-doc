@@ -564,3 +564,117 @@ dividir períodos superiores a 31 días. Para consultas grandes, debe desalentar
 el aumento de `limit` como mecanismo para recuperar todo el conjunto en una
 sola respuesta y orientar al agente a usar el valor por defecto con
 `next_cursor` mientras `has_more=true`.
+
+
+---
+
+## DEC-030 — Bearer token estático individual por usuario para el Security MVP
+
+**Estado:** Aprobada e implementada
+
+El Streamable HTTP productivo requiere un Bearer token estático individual por usuario:
+
+```http
+Authorization: Bearer <token_usuario>
+```
+
+Cada token se genera con 32 bytes aleatorios mediante CSPRNG. El servidor almacena únicamente su SHA-256, asociado a un `userId` y al indicador `enabled`, en un archivo de configuración externo al repositorio.
+
+Formato versionado:
+
+```json
+{
+  "version": 1,
+  "users": [
+    {
+      "id": "usuario",
+      "tokenHash": "<sha256>",
+      "enabled": true
+    }
+  ]
+}
+```
+
+La ruta se configura mediante:
+
+```text
+MCP_AUTH_TOKENS_FILE
+```
+
+y es obligatoria únicamente para el transporte HTTP. `stdio` permanece sin autenticación.
+
+### Punto de aplicación
+
+La autenticación se ejecuta después de las validaciones de Host y Origin y antes de `toNodeHandler`:
+
+```text
+/mcp
+ ↓
+Host
+ ↓
+Origin
+ ↓
+TokenAuthenticator
+ ↓
+AuthContext
+ ↓
+toNodeHandler
+ ↓
+MCP
+```
+
+Una request no autenticada no puede alcanzar `initialize`, `tools/list`, `tools/call`, las capas de dominio ni PostgreSQL.
+
+### Identidad
+
+Una autenticación exitosa crea un contexto mínimo por request:
+
+```text
+userId
+authType = static_token
+```
+
+El transporte lo adapta al `AuthInfo` del SDK. El token original puede existir transitoriamente en memoria durante la request, pero nunca se persiste ni se registra.
+
+### Motivo
+
+La solución permite cerrar rápidamente el endpoint productivo, revocar usuarios individualmente y disponer de identidad básica sin introducir todavía un proveedor OAuth, sesiones propias o una base de datos de autorización.
+
+SHA-256 directo es aceptable en este caso porque los tokens no son passwords humanos sino secretos CSPRNG de 256 bits.
+
+### Operación
+
+El archivo de tokens se carga y valida una sola vez antes de que HTTP comience a escuchar. Una modificación de tokens requiere reinicio ordenado del servicio. Hot reload queda fuera de alcance.
+
+Los fallos de autenticación devuelven de forma uniforme:
+
+```text
+401 Unauthorized
+```
+
+sin revelar si el token es inexistente o está deshabilitado.
+
+### Alcance
+
+Esta decisión no implementa autorización diferenciada. Mientras esté vigente:
+
+```text
+usuario autenticado
+        ↓
+mismas Tools publicadas
+```
+
+OAuth, RBAC, permisos por Tool y data scopes quedan para una fase posterior antes de incorporar capacidades con niveles de sensibilidad diferentes.
+
+### Evidencia E2E productiva
+
+Se validó en producción:
+
+- sin token → `401 Unauthorized`;
+- token inválido → `401 Unauthorized`;
+- token válido → autenticación superada;
+- `initialize` → exitoso;
+- `tools/list` → exitoso;
+- `tools/call` → exitoso;
+- caso de control `TUZ64G`, 28-Sep-2026 → 66 registros;
+- Claude Desktop usando exclusivamente el conector productivo autenticado → 66 registros.
