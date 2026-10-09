@@ -186,6 +186,91 @@ El archivo:
 
 En producción se utiliza el usuario/grupo de servicio `proing-mcp` y permisos restrictivos sobre `/etc/proing-mcp`.
 
+### Administración de tokens en producción
+
+La administración se realiza con la CLI compilada:
+
+```text
+/opt/proing-mcp/app/dist/security/admin/auth-cli.js
+```
+
+y el binario Node:
+
+```text
+/usr/bin/node
+```
+
+Comandos operativos:
+
+```bash
+# Listar usuarios y estado
+sudo env \
+  MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json \
+  /usr/bin/node \
+  /opt/proing-mcp/app/dist/security/admin/auth-cli.js \
+  list
+
+# Crear usuario y generar token
+sudo env \
+  MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json \
+  /usr/bin/node \
+  /opt/proing-mcp/app/dist/security/admin/auth-cli.js \
+  create <userId>
+
+# Rotar token de un usuario existente
+sudo env \
+  MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json \
+  /usr/bin/node \
+  /opt/proing-mcp/app/dist/security/admin/auth-cli.js \
+  rotate <userId>
+
+# Deshabilitar usuario
+sudo env \
+  MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json \
+  /usr/bin/node \
+  /opt/proing-mcp/app/dist/security/admin/auth-cli.js \
+  disable <userId>
+
+# Habilitar usuario
+sudo env \
+  MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json \
+  /usr/bin/node \
+  /opt/proing-mcp/app/dist/security/admin/auth-cli.js \
+  enable <userId>
+```
+
+Los `userId` deben cumplir:
+
+```text
+^[a-z][a-z0-9._-]{0,63}$
+```
+
+`create` y `rotate` muestran el token original una sola vez después de guardar correctamente el nuevo estado. Ese token debe entregarse por un canal seguro y configurarse en el cliente como:
+
+```text
+Authorization: Bearer <token>
+```
+
+El token no puede recuperarse después a partir del servidor; si se pierde debe rotarse.
+
+Las mutaciones no reinician systemd. Después de `create`, `rotate`, `enable` o `disable` se debe ejecutar:
+
+```bash
+sudo systemctl restart proing-mcp
+sudo systemctl is-active proing-mcp
+```
+
+Permisos productivos aprobados:
+
+```text
+/etc/proing-mcp                 root:proing-mcp 0750
+/etc/proing-mcp/tokens.json     root:proing-mcp 0640
+```
+
+El usuario del servicio puede leer las credenciales pero no modificarlas. Las mutaciones se ejecutan mediante `sudo`; no se debe otorgar escritura del directorio al grupo `proing-mcp`.
+
+La CLI protege la persistencia mediante archivo temporal, `fsync`, `rename` atómico y un lock local. Si un cierre abrupto deja un lock obsoleto, no debe eliminarse sin verificar antes que no exista otro proceso administrativo activo.
+
 ### Validación criptográfica
 
 SHA-256 directo se utiliza únicamente porque los tokens tienen 256 bits de entropía y no son passwords elegidos por humanos.
@@ -331,7 +416,7 @@ El endpoint remoto ya dispone de HTTPS y autenticación Bearer individual para e
 - data scopes;
 - auditoría estructurada por actor;
 - rate limits;
-- rotación y administración operativa de credenciales;
+- evolución futura de la administración de credenciales cuando el volumen lo requiera;
 - revisión periódica de exposición de red y reverse proxy.
 
 ---
