@@ -53,20 +53,19 @@
 - Gate de autenticación aplicado antes de `toNodeHandler` y del handler MCP.
 - Identidad mínima por request: `userId` + `authType=static_token`.
 - `stdio` continúa funcionando sin autenticación.
-- Tests posteriores a la implementación de seguridad: 116/116 aprobados.
+- Tests posteriores a la administración operativa de tokens: 130/130 aprobados.
 - `npm run build`: exitoso.
 - E2E productivo con Claude Desktop autenticado: `TUZ64G`, 28-Sep-2026 → 66 registros.
 
 ## Pendientes posteriores al MVP
 
-1. Implementar administración operativa de tokens para altas, revocación y rotación sin editar hashes manualmente.
-2. Incorporar auditoría estructurada por usuario y Tool.
-3. Diseñar autorización por roles/permisos y filtrado de `tools/list` / protección de `tools/call` antes de publicar Tools con sensibilidad diferenciada.
-4. Incorporar data scopes cuando una Tool deba limitar registros según usuario, contrato, regional u otro alcance.
-5. Evolucionar posteriormente a OAuth/identidad corporativa para interoperabilidad y gobierno de acceso a mayor escala.
-6. Revisar rate limiting y configuración de logging de Nginx para asegurar que `Authorization` nunca se registre.
-7. Medir nuevamente antes de modificar índices, cursor o arquitectura.
-8. Evaluar nuevas Tools únicamente a partir de necesidades de negocio aprobadas.
+1. Incorporar auditoría estructurada por usuario y Tool.
+2. Diseñar autorización por roles/permisos y filtrado de `tools/list` / protección de `tools/call` antes de publicar Tools con sensibilidad diferenciada.
+3. Incorporar data scopes cuando una Tool deba limitar registros según usuario, contrato, regional u otro alcance.
+4. Evolucionar posteriormente a OAuth/identidad corporativa para interoperabilidad y gobierno de acceso a mayor escala.
+5. Revisar rate limiting y configuración de logging de Nginx para asegurar que `Authorization` nunca se registre.
+6. Medir nuevamente antes de modificar índices, cursor o arquitectura.
+7. Evaluar nuevas Tools únicamente a partir de necesidades de negocio aprobadas.
 
 ## Security MVP — Autenticación HTTP por usuario
 
@@ -127,6 +126,58 @@ Authorization: Bearer <token_usuario>
 ```
 
 OAuth, permisos por Tool, RBAC y data scopes permanecen fuera de este bloque.
+
+---
+
+## Security MVP — Administración operativa de tokens
+
+**Estado: CERRADO EN PRODUCCIÓN**
+
+Implementación:
+
+- CLI única en `src/security/admin/auth-cli.ts`;
+- comandos `create`, `rotate`, `disable`, `enable` y `list`;
+- tokens nuevos generados con `randomBytes(32)` y base64url;
+- SHA-256 como único valor persistido;
+- validación compartida con `TokenRepository`;
+- escritura atómica mediante temporal + `rename`;
+- lock local para mutaciones concurrentes;
+- preservación de permisos/propietario del archivo;
+- sin hot reload ni reinicio automático;
+- separación de privilegios: proceso `proing-mcp` sólo lectura, mutaciones mediante `sudo`.
+
+Comando productivo base:
+
+```bash
+sudo env \
+  MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json \
+  /usr/bin/node \
+  /opt/proing-mcp/app/dist/security/admin/auth-cli.js \
+  <create|rotate|disable|enable|list> [userId]
+```
+
+Validación automática:
+
+```text
+npm test      → 130/130
+npm run build → exitoso
+```
+
+Validación productiva:
+
+```text
+list                  → jesus enabled
+create mcp-test       → token generado
+reinicio              → token mcp-test autentica
+disable mcp-test      → estado disabled
+reinicio              → mismo token devuelve 401
+```
+
+Después de cualquier mutación se requiere:
+
+```bash
+sudo systemctl restart proing-mcp
+```
 
 ---
 
@@ -544,4 +595,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**Security MVP cerrado y validado en producción. Próximo foco: administración de tokens, auditoría y autorización progresiva por Tool/usuario.**
+**Security MVP y administración operativa de tokens cerrados y validados en producción. Próximo foco: auditoría y autorización progresiva por Tool/usuario.**
