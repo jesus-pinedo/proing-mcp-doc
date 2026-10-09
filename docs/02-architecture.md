@@ -413,6 +413,20 @@ La autenticación por token es deliberadamente una solución MVP. OAuth, RBAC, a
 
 El transporte `stdio` continúa sin autenticación y no depende de esta configuración.
 
+### Administración operativa de tokens
+
+La administración de usuarios/token del Security MVP se realiza mediante una CLI local versionada con el proyecto:
+
+```text
+src/security/admin/auth-cli.ts
+```
+
+La CLI reutiliza `MCP_AUTH_TOKENS_FILE` y el mismo schema del `TokenRepository`. Soporta alta, rotación, habilitación, deshabilitación y listado de usuarios. Las mutaciones escriben mediante archivo temporal y `rename` atómico, con lock local para impedir operaciones administrativas concurrentes.
+
+La CLI no reinicia el servicio ni expone endpoints administrativos. En producción las mutaciones se ejecutan mediante `sudo`; el usuario de servicio `proing-mcp` conserva acceso de solo lectura al archivo de tokens.
+
+Después de una mutación se requiere reinicio manual de `proing-mcp`, porque el archivo se carga una sola vez al arrancar.
+
 ---
 
 ## Compatibilidad con agentes
@@ -523,7 +537,9 @@ proing-mcp/
 │   ├── security/
 │   │   ├── auth-context.ts
 │   │   ├── token-authenticator.ts
-│   │   └── token-repository.ts
+│   │   ├── token-repository.ts
+│   │   └── admin/
+│   │       └── auth-cli.ts
 │   │
 │   ├── config/
 │   │   └── env.ts
