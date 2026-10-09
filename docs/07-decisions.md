@@ -694,3 +694,71 @@ Se validó en producción:
 - `tools/call` → exitoso;
 - caso de control `TUZ64G`, 28-Sep-2026 → 66 registros;
 - Claude Desktop usando exclusivamente el conector productivo autenticado → 66 registros.
+
+
+---
+
+## DEC-031 — Administración local segura de tokens mediante CLI
+
+**Estado:** Aprobada e implementada
+
+La administración de usuarios y tokens del Security MVP se realizará mediante una CLI local versionada con el proyecto:
+
+```text
+src/security/admin/auth-cli.ts
+```
+
+Comandos soportados:
+
+```text
+create <userId>
+rotate <userId>
+disable <userId>
+enable <userId>
+list
+```
+
+### Reglas
+
+- `create` y `rotate` generan 32 bytes aleatorios con CSPRNG y muestran el token original una sola vez;
+- sólo se persiste SHA-256;
+- `disable` y `enable` modifican únicamente el estado;
+- `list` muestra únicamente usuario y estado;
+- el formato de `userId` es `^[a-z][a-z0-9._-]{0,63}$`;
+- la CLI reutiliza el mismo schema y archivo `MCP_AUTH_TOKENS_FILE`;
+- las escrituras son atómicas y utilizan lock local;
+- la CLI no ejecuta `systemctl` ni implementa hot reload;
+- las mutaciones requieren reinicio manual del servicio.
+
+### Separación de privilegios
+
+En producción:
+
+```text
+/etc/proing-mcp                 root:proing-mcp 0750
+/etc/proing-mcp/tokens.json     root:proing-mcp 0640
+```
+
+El proceso `proing-mcp` tiene lectura pero no escritura sobre sus propias credenciales. Las mutaciones se ejecutan mediante `sudo` por un operador autorizado.
+
+### Motivo
+
+Evitar generación de hashes y edición manual de JSON, reducir riesgo de corrupción del archivo y conservar una operación simple sin introducir una base de datos, UI administrativa, endpoint remoto, OAuth ni privilegios adicionales para el proceso MCP.
+
+### Evidencia
+
+La implementación fue validada con 130/130 tests y build exitoso. En producción se verificó el flujo:
+
+```text
+create usuario
+   ↓
+reinicio
+   ↓
+token autentica
+   ↓
+disable usuario
+   ↓
+reinicio
+   ↓
+mismo token recibe 401
+```
