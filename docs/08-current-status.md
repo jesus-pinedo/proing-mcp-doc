@@ -2,7 +2,7 @@
 
 ## Fase
 
-**MVP técnico cerrado / Bloques 0–12 cumplidos**
+**MVP técnico cerrado / Security MVP con autenticación HTTP desplegada y validada en producción**
 
 ## Ya definido
 
@@ -45,14 +45,90 @@
   `MAX_DATE_RANGE_DAYS=31`, `APP_TIMEZONE=America/Bogota`.
 - Arquitectura implementada: Tool → Contract → Service → Repository →
   PostgreSQL → `mcp.vw_historico_vehiculos` → tabla histórica.
+- Endpoint productivo: `https://mcp.proing.com.co/mcp`.
+- HTTPS y Nginx productivos operativos.
+- Streamable HTTP productivo protegido mediante Bearer token individual por usuario.
+- Tokens generados con 256 bits aleatorios; el servidor conserva únicamente SHA-256.
+- Configuración externa mediante `MCP_AUTH_TOKENS_FILE=/etc/proing-mcp/tokens.json`.
+- Gate de autenticación aplicado antes de `toNodeHandler` y del handler MCP.
+- Identidad mínima por request: `userId` + `authType=static_token`.
+- `stdio` continúa funcionando sin autenticación.
+- Tests posteriores a la implementación de seguridad: 116/116 aprobados.
+- `npm run build`: exitoso.
+- E2E productivo con Claude Desktop autenticado: `TUZ64G`, 28-Sep-2026 → 66 registros.
 
 ## Pendientes posteriores al MVP
 
-1. Preparar autenticación, autorización, TLS y exposición de red antes de una publicación remota.
-2. Sustituir las credenciales temporales por el usuario definitivo `proing_mcp` read-only.
-3. Definir despliegue y operación productiva cuando exista aprobación de infraestructura.
-4. Medir nuevamente antes de modificar índices, cursor o arquitectura.
-5. Evaluar nuevas Tools únicamente a partir de necesidades de negocio aprobadas.
+1. Implementar administración operativa de tokens para altas, revocación y rotación sin editar hashes manualmente.
+2. Incorporar auditoría estructurada por usuario y Tool.
+3. Diseñar autorización por roles/permisos y filtrado de `tools/list` / protección de `tools/call` antes de publicar Tools con sensibilidad diferenciada.
+4. Incorporar data scopes cuando una Tool deba limitar registros según usuario, contrato, regional u otro alcance.
+5. Evolucionar posteriormente a OAuth/identidad corporativa para interoperabilidad y gobierno de acceso a mayor escala.
+6. Revisar rate limiting y configuración de logging de Nginx para asegurar que `Authorization` nunca se registre.
+7. Medir nuevamente antes de modificar índices, cursor o arquitectura.
+8. Evaluar nuevas Tools únicamente a partir de necesidades de negocio aprobadas.
+
+## Security MVP — Autenticación HTTP por usuario
+
+**Estado: CERRADO EN PRODUCCIÓN**
+
+Implementación:
+
+- `src/security/auth-context.ts`;
+- `src/security/token-authenticator.ts`;
+- `src/security/token-repository.ts`;
+- configuración `MCP_AUTH_TOKENS_FILE`;
+- archivo de tokens versionado mediante `version: 1`;
+- SHA-256 de tokens CSPRNG de 256 bits;
+- comparación mediante `timingSafeEqual`;
+- usuario habilitado/deshabilitado mediante `enabled`;
+- respuesta uniforme `401 Unauthorized`;
+- protección de todos los métodos sobre `/mcp`;
+- carga de credenciales una sola vez antes de `listen()`;
+- sin nuevas dependencias;
+- sin cambios en Tool, Contract, Service, Repository o PostgreSQL;
+- `stdio` preservado.
+
+Validación automática:
+
+```text
+npm test      → 116/116
+npm run build → exitoso
+```
+
+Validación productiva:
+
+```text
+sin token       → 401
+token inválido  → 401
+token válido    → acceso al protocolo MCP
+initialize      → OK
+tools/list      → OK
+tools/call      → OK
+```
+
+Caso E2E de control:
+
+```text
+cliente: Claude Desktop
+conector: Proing MCP Producción
+Tool: operacion.consultar_historico_vehiculos
+placa: TUZ64G
+fecha: 28-Sep-2026
+resultado: 66 registros
+has_more: false
+next_cursor: null
+```
+
+El conector de Claude utiliza `Sin inicio de sesión` y un Request Header fijo:
+
+```text
+Authorization: Bearer <token_usuario>
+```
+
+OAuth, permisos por Tool, RBAC y data scopes permanecen fuera de este bloque.
+
+---
 
 ## Bloque 12 — Resultado
 
@@ -455,8 +531,9 @@ Implementación reportada:
 
 ## Fuera de alcance por ahora
 
-- autenticación remota definitiva;
-- autorización por usuario;
+- OAuth / autenticación corporativa definitiva;
+- autorización por usuario, rol y Tool;
+- data scopes por usuario o dominio;
 - alta disponibilidad;
 - múltiples dominios completos;
 - interfaz gráfica;
@@ -467,4 +544,4 @@ Implementación reportada:
 
 ## Próximo hito
 
-**MVP técnico cerrado. Cualquier siguiente fase requiere un nuevo alcance aprobado.**
+**Security MVP cerrado y validado en producción. Próximo foco: administración de tokens, auditoría y autorización progresiva por Tool/usuario.**
