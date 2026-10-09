@@ -140,6 +140,35 @@ El archivo `.env` no debe almacenarse en Git.
 
 En AWS se evaluará Secrets Manager u otro mecanismo corporativo.
 
+## Validación del transporte HTTP
+
+Streamable HTTP mantiene protección explícita de Host y Origin mediante las
+utilidades oficiales de `@modelcontextprotocol/node`.
+
+En local, si no se configura lo contrario, las listas permitidas contienen
+únicamente:
+
+```text
+localhost
+127.0.0.1
+[::1]
+```
+
+En producción, los hostnames públicos deben declararse explícitamente, sin
+esquema, puerto ni comodines:
+
+```env
+HTTP_ALLOWED_HOSTS=localhost,127.0.0.1,mcp.proing.com.co
+HTTP_ALLOWED_ORIGINS=localhost,127.0.0.1,mcp.proing.com.co
+```
+
+Un Host no autorizado se rechaza. Para Origin se conserva el comportamiento
+del SDK: los clientes MCP no-browser pueden omitir el header; si lo envían, el
+hostname debe estar autorizado. Esta validación no introduce CORS genérico.
+
+El proceso Node escucha exclusivamente en `127.0.0.1` y permanece detrás de
+Nginx, que expone el endpoint HTTPS productivo.
+
 ---
 
 ## Manejo de errores

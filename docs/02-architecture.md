@@ -369,7 +369,20 @@ El mismo servidor podrá exponerse por:
 http://localhost:<puerto>/mcp
 ```
 
-y posteriormente en AWS mediante HTTPS.
+y en producción mediante HTTPS detrás de Nginx:
+
+```text
+Internet
+   ↓
+HTTPS / Nginx
+   ↓
+127.0.0.1:3000
+   ↓
+Proing MCP
+```
+
+El proceso Node continúa escuchando exclusivamente en `127.0.0.1`. Nginx
+termina HTTPS y reenvía las peticiones al proceso local.
 
 La lógica de las Tools debe ser la misma independientemente del transporte.
 
@@ -554,9 +567,31 @@ DATABASE_POOL_MAX
 
 APP_TIMEZONE=America/Bogota
 HTTP_PORT
+HTTP_ALLOWED_HOSTS
+HTTP_ALLOWED_ORIGINS
 ```
 
 `.env` se utilizará durante desarrollo local para credenciales y configuración sensible y no se versionará. El repositorio incluirá únicamente `.env.example` sin secretos.
+
+`HTTP_ALLOWED_HOSTS` y `HTTP_ALLOWED_ORIGINS` son listas CSV de hostnames, sin
+esquema ni puerto. Si no se definen, ambas quedan limitadas a:
+
+```text
+localhost
+127.0.0.1
+[::1]
+```
+
+En producción deben configurarse explícitamente. Para el endpoint actual:
+
+```env
+HTTP_ALLOWED_HOSTS=localhost,127.0.0.1,mcp.proing.com.co
+HTTP_ALLOWED_ORIGINS=localhost,127.0.0.1,mcp.proing.com.co
+```
+
+No se admiten comodines. La validación de Origin conserva el comportamiento
+del SDK: una petición sin `Origin` es válida para clientes MCP no-browser; si
+el header está presente, su hostname debe pertenecer a la lista autorizada.
 
 ---
 
@@ -591,16 +626,17 @@ La primera versión se desarrolla localmente.
 Posteriormente:
 
 ```text
-Clientes autorizados
-        │
-        ▼
+Internet
+        ↓
 https://mcp.proing.com.co/mcp
-        │
-        ▼
-     EC2 MCP
-        │
-        ├── PostgreSQL Proing
-        └── APIs/servicios Proing
+        ↓
+   HTTPS / Nginx
+        ↓
+ 127.0.0.1:3000
+        ↓
+    Proing MCP
+        ↓
+ PostgreSQL Proing
 ```
 
 El MCP se desplegará en una instancia separada de la EC2 actual de aplicaciones.

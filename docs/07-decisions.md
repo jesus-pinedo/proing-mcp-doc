@@ -534,7 +534,23 @@ Durante el MVP local, Streamable HTTP escucha únicamente en:
 
 y aplica validación de Host y Origin mediante las utilidades oficiales del adaptador Node.
 
-No se implementan todavía autenticación, OAuth, TLS, CORS genérico ni exposición en `0.0.0.0`.
+El proceso Node no implementa autenticación, OAuth, TLS ni CORS genérico, y no
+se expone en `0.0.0.0`. En producción, HTTPS termina en Nginx.
+
+Para el despliegue productivo detrás de Nginx, el bind de Node se conserva en
+`127.0.0.1`. Las validaciones usan `hostHeaderValidation(...)` y
+`originValidation(...)` con listas explícitas configuradas mediante:
+
+```text
+HTTP_ALLOWED_HOSTS
+HTTP_ALLOWED_ORIGINS
+```
+
+Sin configuración, los defaults continúan limitados a `localhost`,
+`127.0.0.1` y `[::1]`. En producción se agrega explícitamente el hostname
+público, sin esquema ni puerto. No se permiten comodines ni se reemplazan las
+validaciones por CORS genérico. Origin sigue siendo opcional para clientes MCP
+no-browser; cuando está presente debe estar autorizado.
 
 
 ---

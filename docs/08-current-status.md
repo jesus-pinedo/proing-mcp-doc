@@ -180,8 +180,8 @@ Implementación reportada:
 - `@modelcontextprotocol/node@2.1.0`;
 - `createMcpHandler(..., { legacy: "stateless" })`;
 - `toNodeHandler(...)`;
-- `localhostHostValidation()`;
-- `localhostOriginValidation()`;
+- `hostHeaderValidation(...)` con allowlist configurable;
+- `originValidation(...)` con allowlist configurable;
 - servidor nativo `node:http`;
 - escucha exclusiva en `127.0.0.1`;
 - endpoint único `/mcp`;
@@ -197,6 +197,25 @@ Implementación reportada:
 - `tools/list` por HTTP: exitoso;
 - `tools/call` real por HTTP: exitoso;
 - `stdio` continúa funcionando.
+
+Habilitación productiva del transporte HTTP:
+
+- `HTTP_ALLOWED_HOSTS` y `HTTP_ALLOWED_ORIGINS` aceptan listas CSV de hostnames;
+- ambas usan por defecto `localhost`, `127.0.0.1` y `[::1]`;
+- una variable definida no puede quedar sin entradas válidas;
+- no se aceptan comodines;
+- `mcp.proing.com.co` debe agregarse explícitamente en producción;
+- Host u Origin presentes y no autorizados continúan devolviendo 403;
+- requests sin Origin continúan permitidos para clientes MCP no-browser;
+- Node permanece en `127.0.0.1` detrás de Nginx;
+- no se agregó CORS genérico ni se cambió la arquitectura de dominio.
+
+Configuración productiva actual:
+
+```env
+HTTP_ALLOWED_HOSTS=localhost,127.0.0.1,mcp.proing.com.co
+HTTP_ALLOWED_ORIGINS=localhost,127.0.0.1,mcp.proing.com.co
+```
 
 ## Bloque 7.5 — Resultado
 
